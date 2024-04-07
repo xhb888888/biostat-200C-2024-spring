@@ -1,0 +1,194 @@
+---
+title: "Biostat 200C Homework 1"
+subtitle: Due Apr 14 @ 11:59PM
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+To submit homework, please submit Rmd and html files to bruinlearn by the deadline.
+
+```{r}
+library(tidyverse)
+library(datasets)
+library(gtsummary)
+library(GGally)
+library(leaps)
+```
+
+## Q1. Reivew of linear models 
+### The swiss data — use Fertility as the response to practice
+- An initial data analysis that explores the numerical and graphical characteristics of the data.
+
+```{r}
+swiss |> head(10)
+```
+
+```{r}
+swiss <- swiss |>
+  as_tibble() |>
+  print(width = Inf)
+```
+
+```{r}
+str(swiss)
+```
+
+```{r}
+swiss |>
+  tbl_summary() |>
+  bold_labels()
+```
+
+```{r}
+ggplot(data = swiss) + 
+  geom_histogram(binwidth = 1,aes(x = Fertility)) + 
+  scale_x_continuous(breaks = seq(30, 100, 2), lim = c(30, 100)) +
+  xlab('Fertility rate') +
+  ggtitle("Fertility rate distribution")
+```
+
+```{r}
+ggpairs(data = swiss) + 
+  labs(title = "Swiss Data")
+```
+
+
+
+- Variable selection to choose the best model.
+
+```{r}
+regfit_full <- regsubsets(Fertility ~ ., data = swiss)
+reg_summary <- summary(regfit_full) 
+print(reg_summary)
+```
+
+```{r}
+plot(reg_summary$cp, xlab = "Number of Variables", ylab = "Cp", type = "l")
+```
+
+**Observation:** 4 variables are selected by Cp criterion. It includes Agriculture, Education, Catholic, and Infant.Mortality.
+
+
+- An exploration of transformations to improve the fit of the model.
+
+```{r}
+plmodi <- lm(Fertility ~ Agriculture + Education + Catholic + Infant.Mortality,
+             data = swiss)
+# summary(plmodi)
+plmodi %>%
+  tbl_regression() %>%
+  bold_labels() %>%
+  bold_p(t = 0.05)
+```
+```{r}
+par(mfrow = c(2, 2))
+termplot(plmodi, partial.resid = TRUE, terms = 1)
+termplot(plmodi, partial.resid = TRUE, terms = 2)
+termplot(plmodi, partial.resid = TRUE, terms = 3)
+termplot(plmodi, partial.resid = TRUE, terms = 4)
+```
+
+- Diagnostics to check the assumptions of your model.
+
+```{r}
+plot(plmodi)
+```
+
+- Some predictions of future observations for interesting values of the predictors.
+
+- An interpretation of the meaning of the model by writing a scientific abstract. (<150 words)
+
+  + BACKGROUND: brief intro of the study background, what are the existing findings
+  
+  + OBJECTIVE: state the overall purpose of your research, e.g., what kind of knowledge gap you are trying to fill in
+  
+  + METHODS: study design (how these data were collected), outcome definitions, statistical procedures used
+  
+  + RESULTS: summary of major findings to address the question raised in objective
+  
+  + CONCLUSIONS:
+  
+
+
+
+## Q2. Concavity of logistic regression log-likelihood 
+
+### Q2.1
+
+Write down the log-likelihood function of logistic regression for binomial responses.
+
+### Q2.2
+
+Derive the gradient vector and Hessian matrix of the log-likelhood function with respect to the regression coefficients $\boldsymbol{\beta}$. 
+
+### Q2.3
+
+Show that the log-likelihood function of logistic regression is a concave function in regression coefficients $\boldsymbol{\beta}$. (Hint: show that the negative Hessian is a positive semidefinite matrix.)
+
+## Q3.  
+
+The National Institute of Diabetes and Digestive and Kidney Diseases conducted a study on 768 adult female Pima Indians living near Phoenix. The purpose of the study was to investigate factors related to diabetes. The data may be found in the the dataset `pima`.
+
+### Q3.1
+
+Create a factor version of the test results and use this to produce an interleaved histogram to show how the distribution of insulin differs between those testing positive and negative. Do you notice anything unbelievable about the plot?
+
+### Q3.2
+
+Replace the zero values of `insulin` with the missing value code `NA`. Recreatethe interleaved histogram plot and comment on the distribution.
+
+### Q3.3
+
+Replace the incredible zeroes in other variables with the missing value code. Fit a model with the result of the diabetes test as the response and all the other variables as predictors. How many observations were used in the model fitting? Why is this less than the number of observations in the data frame.
+
+### Q3.4
+
+Refit the model but now without the insulin and triceps predictors. How many observations were used in fitting this model? Devise a test to compare this model with that in the previous question.
+
+### Q3.5
+
+Use AIC to select a model. You will need to take account of the missing values. Which predictors are selected? How many cases are used in your selected model?
+
+### Q3.6
+
+Create a variable that indicates whether the case contains a missing value. Use this variable as a predictor of the test result. Is missingness associated with the test result? Refit the selected model, but now using as much of the data as reasonable. Explain why it is appropriate to do this.
+
+```{r}
+library(faraway)
+library(tidyverse)
+
+pima <- pima %>% 
+  mutate(
+    glucose2  = ifelse(glucose == 0, NA, glucose),
+    diastolic2 = ifelse(diastolic == 0, NA, diastolic),
+    triceps2 = ifelse(triceps == 0, NA, triceps),
+    insulin2 = ifelse(insulin == 0, NA, insulin),
+    bmi2 = ifelse(bmi == 0, NA, bmi), 
+    diabetes2 = ifelse(diabetes == 0, NA, diabetes),
+    age2 = ifelse(age == 0, NA, age))
+
+pima$missingNA = ifelse(apply(is.na(dplyr::select(pima, contains("2"))), 1, sum) > 0, 1, 0)
+
+missing.glm <- glm(test ~ missingNA, family = binomial(), data = pima)
+
+library(gtsummary)
+missing.glm %>%
+  tbl_regression() %>%
+  bold_labels() %>%
+  bold_p(t = 0.05)
+```
+From above regression, we found missingness was not associate with outcome. This means that the distribution of outcome when removing data with missing is still a representative of the original distribution. This justifies the use of "complete case" analysis. 
+
+### Q3.7
+
+Using the last fitted model of the previous question, what is the difference in the odds of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant? Give a confidence interval for this difference.
+
+### Q3.8 
+
+Do women who test positive have higher diastolic blood pressures? Is the dias- tolic blood pressure significant in the regression model? Explain the distinction between the two questions and discuss why the answers are only apparently contradictory.

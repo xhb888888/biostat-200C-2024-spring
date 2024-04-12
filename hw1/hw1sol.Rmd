@@ -19,11 +19,14 @@ library(datasets)
 library(gtsummary)
 library(GGally)
 library(leaps)
+library(faraway)
 ```
 
-## Q1. Reivew of linear models 
-### The swiss data — use Fertility as the response to practice
-- An initial data analysis that explores the numerical and graphical characteristics of the data.
+## Q1. Reivew of linear models
+
+### The swiss data --- use Fertility as the response to practice
+
+-   An initial data analysis that explores the numerical and graphical characteristics of the data.
 
 ```{r}
 swiss |> head(10)
@@ -58,9 +61,9 @@ ggpairs(data = swiss) +
   labs(title = "Swiss Data")
 ```
 
+**Answer:** By initial data exploration, although there contains 2 missing values in fertility, the data is relatively clean. The range of each seems to make sense by observing the numerical analysis. For graphical analysis, the histogram looks ok. There is no obvious outliers exist. Since we only have 47 observations in total, it is also hard for us to conclude on the general trend of fertility based on the histogram. The paired scatter plot shows that fertility might positively associated with agriculture and infant mortality, negatively associated with examination, education. The relationship between fertility and catholic is not clear from the plot.
 
-
-- Variable selection to choose the best model.
+-   Variable selection to choose the best model.
 
 ```{r}
 regfit_full <- regsubsets(Fertility ~ ., data = swiss)
@@ -72,10 +75,9 @@ print(reg_summary)
 plot(reg_summary$cp, xlab = "Number of Variables", ylab = "Cp", type = "l")
 ```
 
-**Observation:** 4 variables are selected by Cp criterion. It includes Agriculture, Education, Catholic, and Infant.Mortality.
+**Answer:** 4 variables are selected by Cp criterion. It includes Agriculture, Education, Catholic, and Infant.Mortality. We will be using these 4 variables to fit the model.
 
-
-- An exploration of transformations to improve the fit of the model.
+-   An exploration of transformations to improve the fit of the model.
 
 ```{r}
 plmodi <- lm(Fertility ~ Agriculture + Education + Catholic + Infant.Mortality,
@@ -86,74 +88,234 @@ plmodi %>%
   bold_labels() %>%
   bold_p(t = 0.05)
 ```
+
 ```{r}
 par(mfrow = c(2, 2))
-termplot(plmodi, partial.resid = TRUE, terms = 1)
-termplot(plmodi, partial.resid = TRUE, terms = 2)
-termplot(plmodi, partial.resid = TRUE, terms = 3)
-termplot(plmodi, partial.resid = TRUE, terms = 4)
+termplot(plmodi, partial.resid = TRUE, terms = NULL)
 ```
 
-- Diagnostics to check the assumptions of your model.
+**Answer:** By observing the partial residual plot, We cannot see there is non-linear relationship between the response and the predictors. Therefore, transformation is unnecessary.
+
+-   Diagnostics to check the assumptions of your model.
 
 ```{r}
+par(mfrow = c(2, 2))
 plot(plmodi)
 ```
 
-- Some predictions of future observations for interesting values of the predictors.
+**Answer:** Based on the diagnostic plots, the residuals seem to satisfy our assumptions for linear regression model. No influentual points are observed in `Residuals vs Leverage` plot.
 
-- An interpretation of the meaning of the model by writing a scientific abstract. (<150 words)
+-   Some predictions of future observations for interesting values of the predictors.
 
-  + BACKGROUND: brief intro of the study background, what are the existing findings
-  
-  + OBJECTIVE: state the overall purpose of your research, e.g., what kind of knowledge gap you are trying to fill in
-  
-  + METHODS: study design (how these data were collected), outcome definitions, statistical procedures used
-  
-  + RESULTS: summary of major findings to address the question raised in objective
-  
-  + CONCLUSIONS:
-  
+```{r}
+newdata <- data.frame(Agriculture = 50, Education = 10, Catholic = 10, 
+                      Infant.Mortality = 19)
+predict(plmodi, newdata = newdata, interval = "prediction")
 
+newdata2 <- data.frame(Agriculture = 50, Education = 10, Catholic = 15, 
+                       Infant.Mortality = 19)
+predict(plmodi, newdata = newdata2, interval = "prediction")
 
+newdata3 <- data.frame(Agriculture = 50, Education = 10, Catholic = 20, 
+                       Infant.Mortality = 19)
+predict(plmodi, newdata = newdata3, interval = "prediction")
 
-## Q2. Concavity of logistic regression log-likelihood 
+newdata4 <- data.frame(Agriculture = 50, Education = 10, Catholic = 30, 
+                       Infant.Mortality = 19)
+predict(plmodi, newdata = newdata4, interval = "prediction")
+
+newdata5 <- data.frame(Agriculture = 50, Education = 10, Catholic = 40, 
+                       Infant.Mortality = 19)
+predict(plmodi, newdata = newdata5, interval = "prediction")
+```
+
+**Answer:** By holding other predictors constant, we modify percentage of catholic to see change of the fertility measure. We observe that under our specific setting of other predictors, the fertility rate seems to be positively associated with percentage of catholic. This might be an indication that countries with more percentage of catholic tends to have higher fertility measure. However, since we only observe the partial effect of the percentage of catholic on the fertility measure, we cannot conclude that the percentage of catholic is directly increase the fertility measure.
+
+-   An interpretation of the meaning of the model by writing a scientific abstract. (\<150 words)
+
+    -   BACKGROUND: brief intro of the study background, what are the existing findings
+
+    -   OBJECTIVE: state the overall purpose of your research, e.g., what kind of knowledge gap you are trying to fill in
+
+    -   METHODS: study design (how these data were collected), outcome definitions, statistical procedures used
+
+    -   RESULTS: summary of major findings to address the question raised in objective
+
+    -   CONCLUSIONS:
+
+In 1888, the fertility of Switzerlan was beginning to fall. Previous study suggests that industrialization and economic change might be directly affecting the fertility measure in Europe. In this study, we aims to investigate the relationship between fertility and several predictors including `Agriculture`, `Education`, `Catholic`, and `Infant Mortality`. These predictors are rarely being considered by previous investigators but they are strongly correlated with factor like `industrialization`. Therefore, it worth exploring how these predictors are associated with fertility measure. Data was collected from 47 French-speaking provinces at about 1888. We will will conduct numerical and graphical analysis, model diagnosis, and feature selection before fitting a multiple linear regression model. We found that the percentage of catholic is positively associated with the fertility measure by adjusting other predictors. However, we cannot conclude that the percentage of catholic directly increases the fertility measure in a given country. Further study is needed to explore the underlying mechanism of the relationship between the percentage of catholic and fertility measure.
+
+## Q2. Concavity of logistic regression log-likelihood
 
 ### Q2.1
 
 Write down the log-likelihood function of logistic regression for binomial responses.
 
+**Answer:**
+
+The logistic regression has the form $p=\frac{e^{X^t\beta}}{1+e^{X^T\beta}}$
+
+The log likelihood function is
+
+$l(\theta)=\sum log[p_i^{y_i}(1-p_i)^{1-y_i}]=\sum_i[y_i\cdot x_i^T\beta-log(1+e^{x_i^T\beta})]$
+
+```{=tex}
+\begin{align*}
+\end{align*}
+```
 ### Q2.2
 
-Derive the gradient vector and Hessian matrix of the log-likelhood function with respect to the regression coefficients $\boldsymbol{\beta}$. 
+Derive the gradient vector and Hessian matrix of the log-likelhood function with respect to the regression coefficients $\boldsymbol{\beta}$.
+
+**Answer:**
+
+The gradient vector is
+
+$$\phi(\theta)=\frac{\partial l(\theta)}{\partial \beta}=\sum_i[y_i\cdot x_i^T-\frac{e^{x_i^T\beta}x_i^T}{1+e^{x_i^T\beta}}]=\sum_i[y_i-\frac{e^{x_i^T\beta}}{1+e^{x_i^T\beta}}](x_i^T)^T$$
+
+Since the first term is a scalar, we can move $x_i^T$ to the right. Since $x_i^T$ indicates the first row vector, we can transform it to represent it as a column vector.
+
+$$D_\beta \phi(\theta)=\sum_i[-(x_i^T)^TD_\beta\frac{e^{x_i^T\beta}}{1+e^{x_i^T\beta}}]=\sum_i[-(x_i^T)^T(D_m\frac{m}{1+m})(D_te^t)(D_\beta x_i^T\beta)]=\sum_i[-(x_i^T)^T(\frac{1}{(1+m)^2})(e^t)(x_i^T)]=\sum_i[-(x_i^T)^T(\frac{1}{(1+e^{x_i^T\beta})^2})(e^{x_i^T\beta})(x_i^T)]$$
 
 ### Q2.3
 
 Show that the log-likelihood function of logistic regression is a concave function in regression coefficients $\boldsymbol{\beta}$. (Hint: show that the negative Hessian is a positive semidefinite matrix.)
 
-## Q3.  
+**Answer:**
+
+For all vectors $a$,
+
+$$\sum_i[a^T(x_i^T)^T(\frac{1}{(1+e^{x_i^T\beta})^2})(e^{x_i^T\beta})(x_i^T)a]=\sum_i[(x_i^Ta)^T(\frac{e^{x_i^T\beta}}{(1+e^{x_i^T\beta})^2})(x_i^Ta)]=\sum_i[(x_i^Ta)^2(\frac{e^{x_i^T\beta}}{(1+e^{x_i^T\beta})^2})$$
+
+Since exponential function is always positive, the Hessian matrix is positive semidefinite by Energy-based definition. Therefore, the log-likelihood function is concave.
+
+## Q3.
 
 The National Institute of Diabetes and Digestive and Kidney Diseases conducted a study on 768 adult female Pima Indians living near Phoenix. The purpose of the study was to investigate factors related to diabetes. The data may be found in the the dataset `pima`.
+
+```{r}
+data(pima)
+```
 
 ### Q3.1
 
 Create a factor version of the test results and use this to produce an interleaved histogram to show how the distribution of insulin differs between those testing positive and negative. Do you notice anything unbelievable about the plot?
 
+```{r}
+pima$test <- factor(pima$test, levels = c(0, 1), labels = c("Negative", "Positive"))
+```
+
+```{r}
+ggplot(pima, aes(insulin, fill = test)) +
+  geom_histogram(position = "dodge", bins = 30) +
+  labs(title = "Insulin Distribution by Test Result",
+       x = "Insulin",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+**Answer:** The plot shows that there are many zero values in the insulin variable. This is not possible since insulin is a hormone that is always present in the body. The zero values are likely to be missing values that have been coded as zero. There are also some extremely large insulin values that are likely to be errors. These will need to be investigated further.
+
 ### Q3.2
 
-Replace the zero values of `insulin` with the missing value code `NA`. Recreatethe interleaved histogram plot and comment on the distribution.
+Replace the zero values of `insulin` with the missing value code `NA`. Recreate the interleaved histogram plot and comment on the distribution.
+
+```{r}
+pima$insulin[pima$insulin == 0] <- NA
+```
+
+```{r}
+ggplot(pima, aes(insulin, fill = test)) +
+  geom_histogram(position = "dodge", bins = 30) +
+  labs(title = "Insulin Distribution by Test Result",
+       x = "Insulin",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+**Answer:** The plot shows that the distribution of insulin values is different between those testing positive and negative. For those who test negative, they tends to have relatively lower insulin values. However, there are some overlaps of bins between the two groups. It might indicate that we have larger sample size for negative test results.
 
 ### Q3.3
 
 Replace the incredible zeroes in other variables with the missing value code. Fit a model with the result of the diabetes test as the response and all the other variables as predictors. How many observations were used in the model fitting? Why is this less than the number of observations in the data frame.
 
+```{r}
+pima$glucose[pima$glucose == 0] <- NA
+pima$diastolic[pima$diastolic == 0] <- NA
+pima$triceps[pima$triceps == 0] <- NA
+pima$bmi[pima$bmi == 0] <- NA
+pima$age[pima$age == 0] <- NA
+```
+
+```{r}
+fit <- glm(test ~ ., data = pima, family = binomial)
+```
+
+```{r}
+summary(fit)
+```
+
+```{r}
+nrow(pima)-376
+```
+
+**Answer:** The model used 392 observations in the fitting. The missing values in the data frame are not used in the fitting. The number of observations used in the fitting is less than the number of observations in the data frame because the missing values are not used in the fitting.
+
 ### Q3.4
 
 Refit the model but now without the insulin and triceps predictors. How many observations were used in fitting this model? Devise a test to compare this model with that in the previous question.
 
+
+
+```{r}
+
+fit2 <- glm(test ~ . - insulin - triceps, data = pima, family = binomial)
+```
+
+```{r}
+summary(fit2)
+```
+
+```{r}
+nrow(pima)-376
+```
+
+```{r}
+anova(fit, fit2, test = "Chi")
+```
+
+**Answer:** The model used 392 observations in the fitting. We conduct analysis of deviance with `anova` to test whether model 1 is superior than model 2. The result suggests that there is not enough evidence to reject the null hypothesis, which implies that the two models do not differ significantly in terms of their fit to the data.
+
 ### Q3.5
 
 Use AIC to select a model. You will need to take account of the missing values. Which predictors are selected? How many cases are used in your selected model?
+
+```{r}
+summary(is.na(pima))
+```
+
+```{r}
+pimadropna <- pima %>% 
+  na.omit()
+```
+
+```{r}
+summary(is.na(pimadropna))
+```
+
+```{r}
+biglm <- glm(test ~ ., data = pimadropna, family = binomial)
+summary(biglm)
+```
+
+```{r}
+biglm <- glm(test ~ ., data = pimadropna, family = binomial)
+
+step_model <- step(biglm, direction = "back", trace = TRUE)
+summary(step_model)
+```
+
+**Answer:** Rows containing missing values are dropped. `5` predictors are selected based AIC in `backward selection`. The selected predictors are `pregnant`, `glucose`, `bmi`, `diabetes`, and `age`. The model used `392` observations in the fitting.
 
 ### Q3.6
 
@@ -183,12 +345,85 @@ missing.glm %>%
   bold_labels() %>%
   bold_p(t = 0.05)
 ```
-From above regression, we found missingness was not associate with outcome. This means that the distribution of outcome when removing data with missing is still a representative of the original distribution. This justifies the use of "complete case" analysis. 
+
+From above regression, we found missingness is not significantly associated with outcome since p is greater than 0.05. This means that the distribution of outcome when removing data with missing is still a representative of the original distribution. This justifies the use of "complete case" analysis.
+
+```{r}
+library(dplyr)
+pimaSelected <- pima |>
+  collect() |>
+  dplyr::select(test, pregnant, glucose, bmi, diabetes, age)
+```
+
+```{r}
+pimaSelected <- pimaSelected |>
+  na.omit()
+```
+
+```{r}
+
+refitlm <- glm(test ~ ., data = pimaSelected, family = binomial)
+```
+
+```{r}
+refitlm
+```
+
+**Answer:** This is appropriate because missingness is not significantly associated with the test result. The selected model is refitted using the complete cases. This can give us more information and more power in hypothesis testing.
 
 ### Q3.7
 
-Using the last fitted model of the previous question, what is the difference in the odds of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant? Give a confidence interval for this difference.
+Using the last fitted model of the previous question, what is the odd ratio of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant? Give a confidence interval for this difference.
 
-### Q3.8 
+```{r}
+# Calculate the first and third quartiles for BMI
+bmi_q1 <- quantile(pima$bmi, 0.25, na.rm = TRUE)
+bmi_q3 <- quantile(pima$bmi, 0.75, na.rm = TRUE)
 
-Do women who test positive have higher diastolic blood pressures? Is the dias- tolic blood pressure significant in the regression model? Explain the distinction between the two questions and discuss why the answers are only apparently contradictory.
+bmi_diff = bmi_q1 - bmi_q3 
+```
+
+```{r}
+summary(refitlm)
+```
+
+```{r}
+bmi_coef = coef(refitlm)['bmi']
+```
+
+```{r}
+odds_ratio <- exp(bmi_coef * bmi_diff)
+
+# Calculate standard error of the BMI coefficient
+se_bmi <- summary(refitlm)$coefficients["bmi", "Std. Error"]
+
+# Z-value for 95% confidence; approximately 1.96 for 95% CI
+z_value <- 1.96
+
+# Log-odds interval
+log_odds_low <- log(odds_ratio) - z_value * se_bmi 
+log_odds_high <- log(odds_ratio) + z_value * se_bmi
+
+# Convert log-odds interval back to odds ratio
+ci_low <- exp(log_odds_low)
+ci_high <- exp(log_odds_high)
+
+# Output the confidence interval
+cat("Odds Ratio:", odds_ratio, "\n")
+cat("95% Confidence Interval for Odds Ratio: [", ci_low, ", ", ci_high, "]\n")
+
+```
+
+**Answer:** The odds ratio of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant is `0.4772028`. The 95% confidence interval for the odds ratio is `[0.4644589, 0.4902963]`.
+
+### Q3.8
+
+Do women who test positive have higher diastolic blood pressures? Is the diastolic blood pressure significant in the regression model? Explain the distinction between the two questions and discuss why the answers are only apparently contradictory.
+
+**Answer:**
+
+For question 1, it did not specify who we are comparing with. I assume we are comparing women who test positive have higher diastolic blood pressures than women who test negative. Under this assumption, we are comparing 2 groups. We can use a paired t test to compare the diastolic blood pressure.
+
+For question 2, it is asking if the covariate `diastolic blood pressure` is a significant predictor in the regression model. We can conduct F test to test the significance of the covariate.
+
+The answers are only apparently contradictory because the paired t test is comparing the mean of 2 groups, while the F test is testing the significance of the covariate in the regression model. General speaking, question 1 is comparing between 2 groups, while question 2 is testing the significance of one covariate in the regression model.

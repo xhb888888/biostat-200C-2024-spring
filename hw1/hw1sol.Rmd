@@ -1,10 +1,13 @@
 ---
 title: "Biostat 200C Homework 1"
 subtitle: Due Apr 14 @ 11:59PM
-output: 
+output:
   html_document:
-    toc: true
+    toc: yes
     toc_depth: 4
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
 ---
 
 ```{r setup, include=FALSE}
@@ -401,8 +404,8 @@ se_bmi <- summary(refitlm)$coefficients["bmi", "Std. Error"]
 z_value <- 1.96
 
 # Log-odds interval
-log_odds_low <- log(odds_ratio) - z_value * se_bmi 
-log_odds_high <- log(odds_ratio) + z_value * se_bmi
+log_odds_low <- log(odds_ratio) - z_value * se_bmi * bmi_diff
+log_odds_high <- log(odds_ratio) + z_value * se_bmi * bmi_diff
 
 # Convert log-odds interval back to odds ratio
 ci_low <- exp(log_odds_low)
@@ -414,7 +417,7 @@ cat("95% Confidence Interval for Odds Ratio: [", ci_low, ", ", ci_high, "]\n")
 
 ```
 
-**Answer:** The odds ratio of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant is `0.4772028`. The 95% confidence interval for the odds ratio is `[0.4644589, 0.4902963]`.
+**Answer:** The odds ratio of testing positive for diabetes for a woman with a BMI at the first quartile compared with a woman at the third quartile, assuming that all other factors are held constant is `0.4508975`. The 95% confidence interval for the odds ratio is `[0.5862989, 0.3467661]`.
 
 ### Q3.8
 

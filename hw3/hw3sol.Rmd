@@ -1,0 +1,242 @@
+---
+title: "Biostat 200C Homework 3"
+subtitle: Due May 10 @ 11:59PM
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+To submit homework, please upload both Rmd and html files to Bruinlearn
+by the deadline.
+
+## Q1. Concavity of Poisson regression log-likelihood
+
+Let $Y_1,\ldots,Y_n$ be independent random variables with
+$Y_i \sim \text{Poisson}(\mu_i)$ and
+$\log \mu_i = \mathbf{x}_i^T \boldsymbol{\beta}$, $i = 1,\ldots,n$.
+
+### Q1.1
+
+Write down the log-likelihood function.
+
+$f(y;\mu)=e^{-\mu}\frac{\mu^y}{y!}$
+
+$L(\mu)=\prod_{i=1}^{n}f(y_i;\mu)$
+
+$$
+l(\mu)=\sum_{i=1}^{n}log(f(y_i;\mu))\\
+=\sum_{i=1}^{n}(-\mu+y_i\log(\mu)-\log(y_i!))\\
+=\sum_{i=1}^{n}(-e^{\mathbf{x}_i^T \boldsymbol{\beta}}+y_i\mathbf{x}_i^T \boldsymbol{\beta}-\log(y_i!))\\
+$$
+
+### Q1.2
+
+Derive the gradient vector and Hessian matrix of the log-likelhood
+function with respect to the regression coefficients
+$\boldsymbol{\beta}$.
+
+**Answer:**
+
+Note $\boldsymbol{x}_i^T$ is a row vector of $\boldsymbol{X}$ instead of transpose of
+its first column vector
+
+$\nabla_{\beta} l(\mu)=\sum_{i=1}^{n}(-e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}\boldsymbol{x}^T_i+y_i\mathbf{x}_i^T)$
+
+$\nabla_{\beta}^2 l(\mu)=\sum_{i=1}^{n}(-e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i)^T\boldsymbol{x}_i^T)$
+
+### Q1.3
+
+Show that the log-likelihood function of the log-linear model is a
+concave function in regression coefficients $\boldsymbol{\beta}$. (Hint:
+show that the negative Hessian is a positive semidefinite matrix.)
+
+$\sum_{i=1}^{n}(e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i)^T\boldsymbol{x}_i^T)=\sum_{i=1}^{n}(\boldsymbol{a}^Te^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i)^T\boldsymbol{x}_i^T\boldsymbol{a})=\sum_{i=1}^{n}(e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i\boldsymbol{a})^T(\boldsymbol{x}_i^T\boldsymbol{a}))=\sum_{i=1}^{n}(e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i\boldsymbol{a})^2)\geq 0, \text{ for all } \boldsymbol{a\neq 0}$
+
+By energy-based definition,
+
+$\sum_{i=1}^{n}(e^{\boldsymbol{x}^T_i\boldsymbol{\beta}}(\boldsymbol{x}^T_i)^T\boldsymbol{x}_i^T)\succcurlyeq 0$
+
+Therefore, the log-likelihood function of the log-linear model is a concave function in regression coefficients $\boldsymbol{\beta}$.
+
+### Q1.4
+
+Show that for the fitted values $\widehat{\mu}_i$ from maximum
+likelihood estimates 
+
+$$
+\sum_i \widehat{\mu}_i = \sum_i y_i.
+$$ 
+
+Therefore the deviance reduces to 
+
+$$
+D = 2 \sum_i y_i \log \frac{y_i}{\widehat{\mu}_i}.
+$$
+
+**Answer:**
+
+
+
+## Q2. Show negative binomial distribution mean and variance
+
+Recall the probability mass function of negative binomial distribution
+is 
+
+$$
+\mathbb{P}(Y = y) = \binom{y + r - 1}{r - 1} (1 - p)^r p^y, \quad y = 0, 1, \ldots
+$$ 
+
+Show $\mathbb{E}Y = \mu = rp / (1 - p)$ and
+$\operatorname{Var} Y = r p / (1 - p)^2$.
+
+**Answer：**
+
+Recall $logM_Y(t)=r{log(1-p)-rlog[1-pe^t]}$
+
+$\frac{d}{dt}logM_Y(t)=\frac{rpe^t}{1-pe^t}$
+
+$\mathbb{E}Y=\frac{d}{dt}logM_Y(t)\Big|_{t=0}=\frac{rpe^0}{1-pe^0}=\frac{rp}{1-p}$
+
+$\operatorname{Var} Y =\frac{d^2}{d^2t}logM_Y(t)\Big|_{t=0}=\frac{(1-pe^t)rpe^t+pe^2rpe^t}{(1-pe^t)^2}\Big|_{t=0}=\frac{rp}{(1-p)^2}$
+
+
+
+## Q3. The `dvisits` data comes from the Australian Health Survey of 1977–1978 and consist of 5190 single adults where young and old have been oversampled.
+
+### (a) Make plots which show the relationship between the response variable, `doctorco`, and the potential predictors, `age` and `illness`.
+
+**Answer:**
+
+```{r}
+library(faraway)
+library(ggplot2)
+```
+
+```{r}
+p <- ggplot(dvisits, aes(age, doctorco))
+p + geom_jitter()
+```
+
+```{r}
+p2 <- ggplot(dvisits, aes(illness, doctorco))
+p2 + geom_jitter()
+```
+
+### (b) Combine the predictors `chcond1` and `chcond2` into a single three-level factor.Make an appropriate plot showing the relationship between this factor and the response. Comment.
+
+**Answer:**
+
+```{r}
+# Creating the combined factor based on specified rules
+dvisits$condition <- ifelse(dvisits$chcond1 == 1, 1,
+                             ifelse(dvisits$chcond2 == 1, 2, 0))
+
+# Converting the combined factor into a factor type with levels for clarity
+dvisits$condition <- factor(dvisits$condition)
+
+```
+
+```{r}
+ggplot(dvisits, aes(condition, doctorco)) + geom_boxplot()
+```
+Observation in condition 2 has higher doctorco than condition 1 and 0. 
+
+
+
+### (c) Build a Poisson regression model with `doctorco` as the response and `sex`, `age`, `agesq`, `income`, `levyplus`, `freepoor`, `freerepa`, `illness`, `actdays`, `hscore` and the three-level condition factor as possible predictor variables. Considering the deviance of this model, does this model fit the data?
+
+**Answer:**
+
+```{r}
+mod <- glm(doctorco ~ sex + age + agesq + income + levyplus + freepoor + 
+      illness + actdays + hscore + condition, dvisits, family = poisson)
+```
+
+```{r}
+summary(mod)
+```
+
+The model has 4380.3 as residual deviance on 5178 degree of freedom. It means there is no significant difference between current model and saturated model. The model is a good fit to the data.
+
+
+### (d) Plot the residuals and the fitted values — why are there lines of observations on the plot? Make a QQ plot of the residuals and comment.
+
+```{r}
+library(tidyr)
+
+dvisits %>%
+  dplyr::mutate(devres  = residuals(mod, type = "deviance"), 
+         linpred = predict(mod, type = "link")) %>%
+  ggplot + 
+  geom_point(mapping = aes(x = linpred, y = devres)) + 
+  labs(x = "Linear predictor", y = "Deviance residual")
+```
+```{r}
+devres <- residuals(mod)
+qqnorm(devres)
+```
+
+
+
+### (e) Use a stepwise AIC-based model selection method. What sort of person would be predicted to visit the doctor the most under your selected model?
+
+```{r}
+library(gtsummary)
+stats::step(mod, trace = TRUE, direction = "back") %>%
+  tbl_regression() %>%
+  bold_labels()
+```
+
+
+### (f) For the last person in the dataset, compute the predicted probability distribution for their visits to the doctor, i.e., give the probability they visit 0, 1, 2, etc. times.
+
+```{r}
+last_person <- dvisits[nrow(dvisits), ]
+
+lambda <- predict(mod, newdata = last_person, type="response") 
+```
+
+```{r}
+max_count <- 3  # This can be adjusted based on the data context
+probabilities <- dpois(0:max_count, lambda)
+probabilities
+```
+
+
+### (g) Tabulate the frequencies of the number of doctor visits. Compute the expected frequencies of doctor visits under your most recent model. Compare the observed with the expected frequencies and comment on whether it is worth fitting a zero-inflated count model.
+
+### (h) Fit a comparable (Gaussian) linear model and graphically compare the fits. Describe how they differ.
+
+
+## Q4. Uniform association
+
+For the uniform association when all two-way interactions are included,
+i.e., 
+
+$$
+\log \mathbb{E}Y_{ijk} = \log p_{ijk} = \log n + \log p_i + \log p_j + \log p_k + \log p_{ij} + \log p_{ik} + \log p_{jk}.
+$$
+
+Proof the odds ratio (or log of odds ratio) across all stratum $k$ 
+
+$$
+\log \frac{\mathbb{E}Y_{11k}\mathbb{E}Y_{22k}}{\mathbb{E}Y_{12k}\mathbb{E}Y_{21k}}
+$$
+
+is a constant, i.e., the estimated effect of the interaction term "i:j"
+in the uniform association model
+
+$$
+\log \frac{\mathbb{E}Y_{11k}\mathbb{E}Y_{22k}}{\mathbb{E}Y_{12k}\mathbb{E}Y_{21k}}=log\mathbb{E}Y_{11k}+log\mathbb{E}Y_{22k}-log\mathbb{E}Y_{12k}-log\mathbb{E}Y_{21k}\\
+=\log p_{11}+\log p_{1k} +\log p_{1k}+\log p_{22}+log p_{2k}+\log p_{2k}-\log p_{12}-\log p_{1k}-\log p_{2k}-\log p_{21}-\log p_{2k}-\log p_{1k}\\
+=\log p_{11}+log p_{22}-\log p_{12}-\log p_{21}
+$$
+Hence, the odd ratio across all stratum is a constant.

@@ -1,0 +1,102 @@
+---
+title: "In class bonus exercise2 Biostat 200C"
+author: "Hanbei Xiong"
+subtitle: May 9th, 2024
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(faraway)
+library(gtsummary)
+```
+
+# Q1. Reformat the data to have $n=\sum_im_i$ rows, with the binary outcome to represent there are $n=\sum_im_i$ Bernoulli trials conducted.
+
+**Answer:**
+
+```{r}
+orings <- orings %>%
+  as_tibble(rownames = "mission") %>%
+  print(n = Inf)
+```
+```{r}
+expanded_orings <- orings %>%
+  uncount(6) %>% 
+  group_by(mission) %>%
+  mutate(row_id = row_number(), 
+         damage = ifelse(row_id <= damage, 1, 0)) %>% 
+  ungroup() %>%
+  select(-row_id) 
+
+print(expanded_orings)
+```
+
+
+# Q2. Refitted the model using logistic regression (`glm`) using the reformatted data above (no weights are needed) and show it is equivalent to the Binomial model and Bernoulli model with weights.
+
+**Answer:**
+
+```{r}
+mod1 <- glm(damage ~ temp, data = expanded_orings, family = binomial(link = "logit"))
+```
+
+```{r}
+mod2 <- glm(cbind(damage, 6 - damage) ~ temp, family = binomial, data = orings)
+```
+
+
+```{r}
+obs_wt = c(rbind(orings$damage, 6 - orings$damage))
+
+orings_long = orings %>%
+  slice(rep(1:n(), each = 2)) %>% # replicate each row twice
+  mutate(damage = rep(c(1, 0), 23)) %>%
+  mutate(obs_wt = obs_wt)
+
+mod3 <- glm(damage ~ temp, weights = obs_wt, family = binomial, data = orings_long) 
+```
+
+```{r}
+coef(mod1)
+coef(mod2)
+coef(mod3)
+```
+We can see three models have almost identical coefficient estimates. 
+
+
+# Q3. Write out the log-likelihood for above model and show it is equivalent to the Binomial model and Bernoulli model with weights.
+
+**Answer:**
+
+For the binomial model, the log-likelihood is:
+
+$l = \sum_{i=1}^N [y_i \log(p_i) - (m_i-y_i)\log(1 - p_i) +log{m_i \choose y_i}]$
+
+
+The log-likelihood for the expanded bernouli model:
+
+$l = \sum_{i=1}^N \sum_{j=1}^{m_{i}} [y_{ij}\log(p_i)+(1-y_{ij})\log(1-p_i)]$
+
+Since $\sum_{j=1}^{m_{i}}y_{ij}$ is equivalent to $y_i$ in the binomial model. 
+
+Similarly, $\sum_{j=1}^{m_{i}}1-y_{ij}=m_i-\sum_{j=1}^{m_{i}}y_{ij}$
+
+Since $log{m_i \choose y_i}$ is a constant which does not affect $p_i$ we can see the log-likelihood for the binomial model is equivalent to the expanded bernouli model.
+
+For the weighted bernoulli model, the log-likelihood is:
+
+$l = \sum_{i=1}^{N}\sum_{j=1}^{2} w_{ij}[y_{ij}\log(p_i)+(1-y_{ij})\log(1-p_i)]$
+
+Since $\sum_{j=1}^{2}w_{ij}y_{ij}=\sum_{j=1}^{m_{i}}y_{ij}$ 
+
+and similarly, $\sum_{j=1}^{2}w_{ij}(1-y_{ij})=\sum_{j=1}^{m_{i}}1-y_{ij}$
+
+Thus, the log-likelihood for the weighted bernoulli model is equivalent to the expanded bernoulli model. Hence, we have prove all three models are equivalent.
+
+
+

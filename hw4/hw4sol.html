@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.537">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Biostat 200C Homework 4</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="hw4sol_files/libs/clipboard/clipboard.min.js"></script>
+<script src="hw4sol_files/libs/quarto-html/quarto.js"></script>
+<script src="hw4sol_files/libs/quarto-html/popper.min.js"></script>
+<script src="hw4sol_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="hw4sol_files/libs/quarto-html/anchor.min.js"></script>
+<link href="hw4sol_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="hw4sol_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="hw4sol_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="hw4sol_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="hw4sol_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Biostat 200C Homework 4</h1>
+<p class="subtitle lead">Due May 24 @ 11:59PM</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(faraway)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MASS)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="q1.-elmr-excercise-7.5-p150" class="level2">
+<h2 class="anchored" data-anchor-id="q1.-elmr-excercise-7.5-p150">Q1. ELMR Excercise 7.5 (p150)</h2>
+<p><strong>(a) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(debt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>debt<span class="sc">$</span>ccarduse <span class="ot">&lt;-</span> <span class="fu">factor</span>(debt<span class="sc">$</span>ccarduse, <span class="at">ordered =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#debt$incomegp &lt;- factor(debt$incomegp, ordered = TRUE)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(debt, <span class="fu">aes</span>(<span class="at">x =</span> ccarduse, <span class="at">y =</span> prodebt, <span class="at">color =</span> ccarduse)) <span class="sc">+</span> <span class="fu">geom_jitter</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 73 rows containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Observation with high frequency of credit card usage are more favorable to debt.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(debt, <span class="fu">aes</span>(<span class="at">x =</span> incomegp, <span class="at">y =</span> prodebt, <span class="at">color =</span> incomegp)) <span class="sc">+</span> <span class="fu">geom_jitter</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 61 rows containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The level of income does not seem to have a strong relationship with the preference to debt.</p>
+<p><strong>(b) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>pomod <span class="ot">&lt;-</span> <span class="fu">polr</span>(ccarduse <span class="sc">~</span> ., <span class="at">data =</span> debt)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pomod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Re-fitting to get Hessian</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+polr(formula = ccarduse ~ ., data = debt)
+
+Coefficients:
+            Value Std. Error t value
+incomegp  0.47131     0.1061  4.4423
+house     0.11600     0.2324  0.4992
+children -0.07872     0.1250 -0.6296
+singpar   0.88172     0.5971  1.4766
+agegp     0.20568     0.1576  1.3050
+bankacc   2.10270     0.5934  3.5435
+bsocacc   0.47322     0.2671  1.7715
+manage    0.18179     0.1653  1.0998
+cigbuy   -0.73546     0.2981 -2.4674
+xmasbuy   0.47014     0.4130  1.1385
+locintrn  0.11881     0.1424  0.8344
+prodebt   0.61046     0.1822  3.3497
+
+Intercepts:
+    Value   Std. Error t value
+1|2  7.9694  1.4752     5.4023
+2|3  9.3944  1.5051     6.2417
+
+Residual Deviance: 511.673 
+AIC: 539.673 
+(160 observations deleted due to missingness)</code></pre>
+</div>
+</div>
+<p>The 2 most significant predictors are <code>incomegp</code> and <code>bankacc</code>.</p>
+<ul>
+<li><p><code>incomegp</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.602096 as income increases by one unit.</p></li>
+<li><p><code>bankacc</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.605149 as having bank account compared to not having bank account.</p></li>
+</ul>
+<p>The 2 least significant predictors are <code>house</code> and <code>children</code>.</p>
+<p><strong>(c) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>pomod_least <span class="ot">&lt;-</span> <span class="fu">polr</span>(ccarduse <span class="sc">~</span> house, <span class="at">data =</span> debt)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pomod_least)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Re-fitting to get Hessian</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+polr(formula = ccarduse ~ house, data = debt)
+
+Coefficients:
+      Value Std. Error t value
+house 0.558     0.1433   3.895
+
+Intercepts:
+    Value  Std. Error t value
+1|2 1.3000 0.3118     4.1698 
+2|3 2.4670 0.3274     7.5344 
+
+Residual Deviance: 847.2661 
+AIC: 853.2661 
+(36 observations deleted due to missingness)</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.558</span> <span class="sc">-</span> <span class="fl">1.96</span><span class="sc">*</span><span class="fl">0.1433</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.277132</code></pre>
+</div>
+</div>
+<p>The predictor seems to be significant in this model. There is contradiction on conclusion between the two models.</p>
+<p><strong>(d) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#drop missing values</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>debt_clean <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(debt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pomod_clean <span class="ot">&lt;-</span> <span class="fu">polr</span>(ccarduse <span class="sc">~</span> ., <span class="at">data =</span> debt_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>pomod_clean_i <span class="ot">&lt;-</span> <span class="fu">step</span>(pomod_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=539.67
+ccarduse ~ incomegp + house + children + singpar + agegp + bankacc + 
+    bsocacc + manage + cigbuy + xmasbuy + locintrn + prodebt
+
+           Df    AIC
+- house     1 537.92
+- children  1 538.07
+- locintrn  1 538.37
+- manage    1 538.89
+- xmasbuy   1 539.00
+- agegp     1 539.38
+&lt;none&gt;        539.67
+- singpar   1 539.75
+- bsocacc   1 540.83
+- cigbuy    1 543.94
+- prodebt   1 549.30
+- bankacc   1 554.83
+- incomegp  1 558.37
+
+Step:  AIC=537.92
+ccarduse ~ incomegp + children + singpar + agegp + bankacc + 
+    bsocacc + manage + cigbuy + xmasbuy + locintrn + prodebt
+
+           Df    AIC
+- children  1 536.32
+- locintrn  1 536.57
+- xmasbuy   1 537.19
+- manage    1 537.23
+&lt;none&gt;        537.92
+- singpar   1 538.01
+- agegp     1 538.54
+- bsocacc   1 539.14
+- cigbuy    1 542.55
+- prodebt   1 547.61
+- bankacc   1 553.79
+- incomegp  1 557.55
+
+Step:  AIC=536.32
+ccarduse ~ incomegp + singpar + agegp + bankacc + bsocacc + manage + 
+    cigbuy + xmasbuy + locintrn + prodebt
+
+           Df    AIC
+- locintrn  1 535.01
+- xmasbuy   1 535.34
+- manage    1 535.71
+- singpar   1 536.23
+&lt;none&gt;        536.32
+- bsocacc   1 537.47
+- agegp     1 538.12
+- cigbuy    1 541.09
+- prodebt   1 545.83
+- bankacc   1 551.97
+- incomegp  1 556.19
+
+Step:  AIC=535.01
+ccarduse ~ incomegp + singpar + agegp + bankacc + bsocacc + manage + 
+    cigbuy + xmasbuy + prodebt
+
+           Df    AIC
+- xmasbuy   1 534.19
+- manage    1 534.58
+- singpar   1 534.90
+&lt;none&gt;        535.01
+- bsocacc   1 536.40
+- agegp     1 536.66
+- cigbuy    1 539.71
+- prodebt   1 543.93
+- bankacc   1 551.87
+- incomegp  1 555.76
+
+Step:  AIC=534.19
+ccarduse ~ incomegp + singpar + agegp + bankacc + bsocacc + manage + 
+    cigbuy + prodebt
+
+           Df    AIC
+- manage    1 533.90
+&lt;none&gt;        534.19
+- singpar   1 534.32
+- bsocacc   1 535.32
+- agegp     1 536.11
+- cigbuy    1 538.62
+- prodebt   1 543.71
+- bankacc   1 550.24
+- incomegp  1 556.78
+
+Step:  AIC=533.9
+ccarduse ~ incomegp + singpar + agegp + bankacc + bsocacc + cigbuy + 
+    prodebt
+
+           Df    AIC
+- singpar   1 533.59
+&lt;none&gt;        533.90
+- bsocacc   1 536.04
+- agegp     1 536.27
+- cigbuy    1 539.16
+- prodebt   1 542.16
+- bankacc   1 551.27
+- incomegp  1 555.32
+
+Step:  AIC=533.59
+ccarduse ~ incomegp + agegp + bankacc + bsocacc + cigbuy + prodebt
+
+           Df    AIC
+&lt;none&gt;        533.59
+- bsocacc   1 535.42
+- agegp     1 535.60
+- cigbuy    1 538.72
+- prodebt   1 542.25
+- bankacc   1 549.99
+- incomegp  1 553.43</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>final_model <span class="ot">&lt;-</span> <span class="fu">polr</span>(ccarduse <span class="sc">~</span> incomegp <span class="sc">+</span> agegp <span class="sc">+</span> bankacc <span class="sc">+</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                      bsocacc <span class="sc">+</span> cigbuy <span class="sc">+</span> prodebt, <span class="at">data =</span> debt_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(final_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Re-fitting to get Hessian</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Call:
+polr(formula = ccarduse ~ incomegp + agegp + bankacc + bsocacc + 
+    cigbuy + prodebt, data = debt_clean)
+
+Coefficients:
+           Value Std. Error t value
+incomegp  0.4589     0.1007   4.555
+agegp     0.2696     0.1352   1.993
+bankacc   2.0816     0.5753   3.618
+bsocacc   0.5048     0.2591   1.949
+cigbuy   -0.7677     0.2922  -2.627
+prodebt   0.5635     0.1755   3.211
+
+Intercepts:
+    Value   Std. Error t value
+1|2  5.9944  0.9961     6.0178
+2|3  7.3948  1.0276     7.1961
+
+Residual Deviance: 517.5895 
+AIC: 533.5895 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(final_model<span class="sc">$</span>coef[<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> incomegp     agegp   bankacc   bsocacc    cigbuy   prodebt 
+1.5822669 1.3093912 8.0170914 1.6566115 0.4640734 1.7568894 </code></pre>
+</div>
+</div>
+<ul>
+<li><p><code>incomegp</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.582267 as income increases by one unit.</p></li>
+<li><p><code>agegp</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.309391 as age increases by one unit.</p></li>
+<li><p><code>bankacc</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 8.0170914 as having bank account compared to not having bank account.</p></li>
+<li><p><code>bsocacc</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.6566115 as having building society account compared to not having building society account.</p></li>
+<li><p><code>cigbuy</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 0.4640734 as the observation buys cigarettes compared to not buying cigarettes.</p></li>
+<li><p><code>prodebt</code>: The odds of moving from credit card usage level 1 to credit card usage level 2 or from credit card usage level 2 to credit card usage level 3 increases by a factor of 1.7568894 as prodebt increases by one unit.</p></li>
+</ul>
+<p>We cannot conclude that dropped predictors have no relation to the response. The dropped predictors may have interaction with the remained predictors in the model to affect the response.</p>
+<p><strong>(e) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>l1 <span class="ot">=</span> <span class="fu">median</span>(debt_clean<span class="sc">$</span>incomegp)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>l2 <span class="ot">=</span> <span class="fu">median</span>(debt_clean<span class="sc">$</span>agegp)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>l3 <span class="ot">=</span> <span class="fu">median</span>(debt_clean<span class="sc">$</span>bankacc)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>l4 <span class="ot">=</span> <span class="fu">median</span>(debt_clean<span class="sc">$</span>bsocacc)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>l5 <span class="ot">=</span> <span class="fu">median</span>(debt_clean<span class="sc">$</span>prodebt)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(final_model, <span class="fu">data.frame</span>(<span class="at">incomegp =</span> l1, <span class="at">agegp =</span> l2, <span class="at">bankacc =</span> l3, <span class="at">bsocacc =</span> l4, <span class="at">prodebt =</span> l5, <span class="at">cigbuy =</span> <span class="dv">1</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        1         2         3 
+0.6149076 0.2513666 0.1337258 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(final_model, <span class="fu">data.frame</span>(<span class="at">incomegp =</span> l1, <span class="at">agegp =</span> l2, <span class="at">bankacc =</span> l3, <span class="at">bsocacc =</span> l4, <span class="at">prodebt =</span> l5, <span class="at">cigbuy =</span> <span class="dv">0</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        1         2         3 
+0.4256250 0.3247658 0.2496092 </code></pre>
+</div>
+</div>
+<p>Row one in the output is the probability for smoker and row 2 is the probability for non-smoker.</p>
+<p><strong>(f) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>mod_hazard <span class="ot">=</span> <span class="fu">polr</span>(ccarduse <span class="sc">~</span> incomegp <span class="sc">+</span> agegp <span class="sc">+</span> bankacc <span class="sc">+</span> bsocacc <span class="sc">+</span> cigbuy <span class="sc">+</span> prodebt, </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>     <span class="at">method =</span> <span class="st">"cloglog"</span>, <span class="at">data =</span> debt_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(mod_hazard, <span class="fu">data.frame</span>(<span class="at">incomegp =</span> l1, <span class="at">agegp =</span> l2, <span class="at">bankacc =</span> l3, <span class="at">bsocacc =</span> l4, <span class="at">prodebt =</span> l5, <span class="at">cigbuy =</span> <span class="dv">1</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        1         2         3 
+0.5571469 0.2872181 0.1556350 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">predict</span>(mod_hazard, <span class="fu">data.frame</span>(<span class="at">incomegp =</span> l1, <span class="at">agegp =</span> l2, <span class="at">bankacc =</span> l3, <span class="at">bsocacc =</span> l4, <span class="at">prodebt =</span> l5, <span class="at">cigbuy =</span> <span class="dv">0</span>), <span class="at">type =</span> <span class="st">"probs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        1         2         3 
+0.4491074 0.2946605 0.2562321 </code></pre>
+</div>
+</div>
+<p>Row one in the output is the probability for smoker and row 2 is the probability for non-smoker.</p>
+<p>The general trend when comparing row 1 and row2 in the proportional hazards model is unchanged compared to the proportional odd smodel. Therefore, it does not seem to make a difference to use this type of model</p>
+</section>
+<section id="q2.-moments-of-exponential-family-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="q2.-moments-of-exponential-family-distributions">Q2. Moments of exponential family distributions</h2>
+<p>Show that the exponential family distributions have moments <span class="math display">\[\begin{eqnarray*}
+  \mathbb{E}Y &amp;=&amp; \mu = b'(\theta) \\
+  \operatorname{Var}Y &amp;=&amp; \sigma^2 = b''(\theta) a(\phi).
+\end{eqnarray*}\]</span></p>
+<p>Denote <span class="math inline">\(f_y = f(y;\theta,\phi)=\exp\left(\frac{y\theta-b(\theta)}{a(\phi)}+c(y,\phi)\right)\)</span></p>
+<p><span class="math inline">\(l(\theta)=\log(f_y)=\frac{y\theta-b(\theta)}{a(\phi)}+c(y,\phi)\)</span></p>
+<p><span class="math inline">\(l'(\theta)=\frac{y-b'(\theta)}{a(\phi)}\)</span></p>
+<p>Since true <span class="math inline">\(\theta\)</span> must maximize <span class="math inline">\(l(\theta)\)</span>, we have <span class="math inline">\(E(l'(\theta))=0\)</span></p>
+<p><span class="math inline">\(E(\frac{y-b'(\theta)}{a(\phi)})=0\)</span></p>
+<p><span class="math inline">\(E(Y)=b'(\theta)=\mu\)</span></p>
+<p><span class="math inline">\(l''(\theta)=-\frac{b''(\theta)}{a(\phi)}\)</span></p>
+<p><span class="math inline">\(E(\frac{d^2l}{d\theta^2})=-E[(\frac{dl}{d\theta})^2]\)</span></p>
+<p><span class="math inline">\(E[-\frac{b''(\theta)}{a(\phi)}]=\frac{-b''(\theta)}{a(\phi)}=-\frac{Var(Y)}{[a(\phi)]^2}\)</span></p>
+<p><span class="math inline">\(Var(Y)=b''(\theta)a(\phi)=\sigma^2\)</span></p>
+</section>
+<section id="q3.-score-and-information-matrix-of-glm" class="level2">
+<h2 class="anchored" data-anchor-id="q3.-score-and-information-matrix-of-glm">Q3. Score and information matrix of GLM</h2>
+<p>Derive the gradient (score), negative Hessian, and Fisher information matrix (expected negative Hessian) of GLM.</p>
+<p><span class="math inline">\(l(\beta)=\sum \frac{y_i\theta_i-b(\theta_i)}{a(\phi)}+c(y_i,\phi)\)</span></p>
+<p>Assume g is the canonical link function, we have <span class="math inline">\(\theta_i=g(\mu_i)=\eta_i=X^T\beta\)</span></p>
+<p><span class="math inline">\(\nabla l(\beta)=\sum \frac{y_i\frac{d\theta_i}{d\beta}-\frac{db(\theta_i)}{d\beta}\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{y_i\frac{d\theta_i}{d\beta}-b'(\theta_i)\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{(y_i-b'(\theta_i))\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{(y_i-\mu)\mu'}{\sigma^2}x_i\)</span></p>
+<p><span class="math inline">\(-\nabla^2 l(\beta)=\sum\frac{[\mu_i'(\eta_i)]^2}{\sigma_i^2}x_ix_i^T-\frac{(y_i-\mu_i)u_i''(\eta_i)}{\sigma^2}+\frac{(y_i-\mu_i)[\mu_i'(\eta_i)]^2(d\sigma_i^2/d\mu_i)}{\sigma_i^4}x_ix_i^T\)</span></p>
+<p>Since <span class="math inline">\(E(y_i)=\mu_i\)</span></p>
+<p><span class="math inline">\(E[-\nabla^2l(\beta)]=\sum\frac{[\mu_i'(\eta_i)]^2}{\sigma_i^2}x_ix_i^T\)</span></p>
+</section>
+<section id="q4.-elmr-exercise-8.1-p171" class="level2">
+<h2 class="anchored" data-anchor-id="q4.-elmr-exercise-8.1-p171">Q4. ELMR Exercise 8.1 (p171)</h2>
+<p><strong>(a) Answer:</strong></p>
+<p>We first rewrite the function.</p>
+<p><span class="math inline">\(f(y)=\lambda e^{-\lambda y}=e^{\log(\lambda)-\lambda y}=e^{-\lambda y+\log(\lambda)}\)</span></p>
+<p><span class="math inline">\(\theta = -\lambda\)</span></p>
+<p><span class="math inline">\(\phi = 1\)</span></p>
+<p><span class="math inline">\(a(\phi) = 1\)</span></p>
+<p><span class="math inline">\(b(\theta)=-\log(-\theta)\)</span></p>
+<p><span class="math inline">\(c(y,\phi) = 0\)</span></p>
+<p><strong>(b) Answer:</strong></p>
+<p><span class="math inline">\(\mu = b'(\theta) = \frac{1}{\lambda}\)</span></p>
+<p><span class="math inline">\(g(\mu) = g(b'(\theta))=g(\frac{1}{-\theta})=\theta=-\frac{1}{\mu}=\eta\)</span></p>
+<p><span class="math inline">\(Var(\mu)=b''(\theta)a(\phi)=\frac{1}{\theta^2}=\mu^2\)</span></p>
+<p><strong>(c) Answer:</strong></p>
+<p>We can end up with negative value for <span class="math inline">\(\lambda\)</span>.</p>
+<p><strong>(d) Answer:</strong></p>
+<p>When comparing nested model, a likelihood ratio test should be used which assumed <span class="math inline">\(\chi^2\)</span> distribution. F test should only be used when the models assumed normal assumption.</p>
+<p><strong>(e) Answer:</strong></p>
+<p><span class="math inline">\(D(y,\hat{\mu})=2\sum_{i=1}^n \left[y_i(\mu_i-\hat{\mu}_i)-\log(y_i)+b(\hat{\mu}_i)\right]\)</span></p>
+</section>
+<section id="q5.-elmr-exercise-8.4-p172" class="level2">
+<h2 class="anchored" data-anchor-id="q5.-elmr-exercise-8.4-p172">Q5. ELMR Exercise 8.4 (p172)</h2>
+<p><strong>(a) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(gala,<span class="at">package=</span><span class="st">"faraway"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(Species <span class="sc">~</span> . <span class="sc">-</span>Endemics, <span class="at">data =</span> gala, <span class="at">family =</span> poisson)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Species ~ . - Endemics, family = poisson, data = gala)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  3.155e+00  5.175e-02  60.963  &lt; 2e-16 ***
+Area        -5.799e-04  2.627e-05 -22.074  &lt; 2e-16 ***
+Elevation    3.541e-03  8.741e-05  40.507  &lt; 2e-16 ***
+Nearest      8.826e-03  1.821e-03   4.846 1.26e-06 ***
+Scruz       -5.709e-03  6.256e-04  -9.126  &lt; 2e-16 ***
+Adjacent    -6.630e-04  2.933e-05 -22.608  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 3510.73  on 29  degrees of freedom
+Residual deviance:  716.85  on 24  degrees of freedom
+AIC: 889.68
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<p>The values of coefficients and deviances are given in the output above.</p>
+<p><strong>(b) Answer:</strong></p>
+<p><span class="math inline">\(\eta=\log(\mu)\)</span>, <span class="math inline">\(\frac{d\eta}{d\mu}=\frac{1}{\mu}\)</span>, <span class="math inline">\(V(\mu)=\mu\)</span>, <span class="math inline">\(w_i=\mu_i\)</span></p>
+<p><span class="math inline">\(z_i=\eta_i+\frac{y_i-\mu_i}{w_i}=\log(\mu_i)+\frac{y_i-\mu_i}{\mu_i}\)</span></p>
+<p><strong>(c) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> gala<span class="sc">$</span>Species</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> y</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> <span class="fu">log</span>(mu)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> mu</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> eta <span class="sc">+</span> (y<span class="sc">-</span>mu)<span class="sc">/</span>mu</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>lmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(z  <span class="sc">~</span> . <span class="sc">-</span>Species <span class="sc">-</span>Endemics, <span class="at">weights=</span>w, gala)</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(lmod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept)          Area     Elevation       Nearest         Scruz 
+ 3.5191545412 -0.0005298484  0.0031643557  0.0025188990 -0.0037899780 
+     Adjacent 
+-0.0006623523 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">coef</span>(mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept)          Area     Elevation       Nearest         Scruz 
+ 3.1548078779 -0.0005799429  0.0035405940  0.0088255719 -0.0057094223 
+     Adjacent 
+-0.0006630311 </code></pre>
+</div>
+</div>
+<p>The coefficients are quite close.</p>
+<p><strong>(d) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> gala<span class="sc">$</span>Species</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> lmod<span class="sc">$</span>fit</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">exp</span>(eta)</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> mu</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> eta <span class="sc">+</span> (y<span class="sc">-</span>mu)<span class="sc">/</span>mu</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>lmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(z  <span class="sc">~</span> . <span class="sc">-</span>Species <span class="sc">-</span>Endemics, <span class="at">weights=</span>w, gala)</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="sc">*</span> <span class="fu">sum</span>(y <span class="sc">*</span> <span class="fu">log</span>(y <span class="sc">/</span> mu) <span class="sc">-</span> (y <span class="sc">-</span> mu), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 828.0096</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Species ~ . - Endemics, family = poisson, data = gala)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  3.155e+00  5.175e-02  60.963  &lt; 2e-16 ***
+Area        -5.799e-04  2.627e-05 -22.074  &lt; 2e-16 ***
+Elevation    3.541e-03  8.741e-05  40.507  &lt; 2e-16 ***
+Nearest      8.826e-03  1.821e-03   4.846 1.26e-06 ***
+Scruz       -5.709e-03  6.256e-04  -9.126  &lt; 2e-16 ***
+Adjacent    -6.630e-04  2.933e-05 -22.608  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 3510.73  on 29  degrees of freedom
+Residual deviance:  716.85  on 24  degrees of freedom
+AIC: 889.68
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<p>The deviance after the first iteration is 828.0096 which is larger than 716.85 which is the deviance of the GLM.</p>
+<p><strong>(e) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> gala<span class="sc">$</span>Species</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>eta <span class="ot">&lt;-</span> lmod<span class="sc">$</span>fit</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">exp</span>(eta)</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> mu</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> eta <span class="sc">+</span> (y <span class="sc">-</span> mu)<span class="sc">/</span>mu</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>lmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(z <span class="sc">~</span> . <span class="sc">-</span>Species <span class="sc">-</span>Endemics, <span class="at">weights=</span>w, gala)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>lmod<span class="sc">$</span>coef</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept)          Area     Elevation       Nearest         Scruz 
+ 3.1562582546 -0.0005793855  0.0035379237  0.0087861184 -0.0056868875 
+     Adjacent 
+-0.0006630167 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="sc">*</span> <span class="fu">sum</span>(y <span class="sc">*</span> <span class="fu">log</span>(y <span class="sc">/</span> mu) <span class="sc">-</span> (y <span class="sc">-</span> mu), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 719.4158</code></pre>
+</div>
+</div>
+<p>The deviance after this iteration is 719.4158 which is more close to the deviance of the GLM. The coefficient given in this iteration also gets closer to the coefficients of GLM.</p>
+<p><strong>(f) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> gala<span class="sc">$</span>Species</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>deviance <span class="ot">=</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sum</span>(y <span class="sc">*</span> <span class="fu">log</span>(y <span class="sc">/</span> mu) <span class="sc">-</span> (y <span class="sc">-</span> mu), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (iter <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) {</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>  eta <span class="ot">&lt;-</span> lmod<span class="sc">$</span>fit</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">exp</span>(eta)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>  w <span class="ot">&lt;-</span> mu</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>  z <span class="ot">&lt;-</span> eta <span class="sc">+</span> (y <span class="sc">-</span> mu)<span class="sc">/</span>mu</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>  lmod <span class="ot">&lt;-</span> <span class="fu">lm</span>(z <span class="sc">~</span> . <span class="sc">-</span>Species <span class="sc">-</span>Endemics, <span class="at">weights=</span>w, gala)</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>  curr_deviance <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">sum</span>(y <span class="sc">*</span> <span class="fu">log</span>(y <span class="sc">/</span> mu) <span class="sc">-</span> (y <span class="sc">-</span> mu), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(curr_deviance)</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">abs</span>(deviance <span class="sc">-</span> curr_deviance) <span class="sc">&lt;</span> <span class="fl">0.0001</span>) {</span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>  deviance <span class="ot">=</span> curr_deviance</span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 716.8488
+[1] 716.8458
+[1] 716.8458</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>lmod<span class="sc">$</span>coef</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept)          Area     Elevation       Nearest         Scruz 
+ 3.1548078779 -0.0005799429  0.0035405940  0.0088255719 -0.0057094223 
+     Adjacent 
+-0.0006630311 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>mod<span class="sc">$</span>coef</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  (Intercept)          Area     Elevation       Nearest         Scruz 
+ 3.1548078779 -0.0005799429  0.0035405940  0.0088255719 -0.0057094223 
+     Adjacent 
+-0.0006630311 </code></pre>
+</div>
+</div>
+<p>They are exactly the same.</p>
+<p><strong>(g) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>xm <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(lmod)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>wm <span class="ot">&lt;-</span> <span class="fu">diag</span>(w)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="co">#Standard error</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">solve</span>(<span class="fu">t</span>(xm) <span class="sc">%*%</span> wm <span class="sc">%*%</span> xm)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> (Intercept)         Area    Elevation      Nearest        Scruz     Adjacent 
+5.174955e-02 2.627299e-05 8.740709e-05 1.821261e-03 6.256214e-04 2.932754e-05 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Species ~ . - Endemics, family = poisson, data = gala)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  3.155e+00  5.175e-02  60.963  &lt; 2e-16 ***
+Area        -5.799e-04  2.627e-05 -22.074  &lt; 2e-16 ***
+Elevation    3.541e-03  8.741e-05  40.507  &lt; 2e-16 ***
+Nearest      8.826e-03  1.821e-03   4.846 1.26e-06 ***
+Scruz       -5.709e-03  6.256e-04  -9.126  &lt; 2e-16 ***
+Adjacent    -6.630e-04  2.933e-05 -22.608  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 3510.73  on 29  degrees of freedom
+Residual deviance:  716.85  on 24  degrees of freedom
+AIC: 889.68
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<p>They are exactly the same.</p>
+</section>
+<section id="q6.-elmr-exercise-8.5-p172" class="level2">
+<h2 class="anchored" data-anchor-id="q6.-elmr-exercise-8.5-p172">Q6. ELMR Exercise 8.5 (p172)</h2>
+<p><strong>(a) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">glm</span>(Species <span class="sc">~</span> . <span class="sc">-</span>Endemics, <span class="at">data =</span> gala, <span class="at">family =</span> poisson)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Species ~ . - Endemics, family = poisson, data = gala)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  3.155e+00  5.175e-02  60.963  &lt; 2e-16 ***
+Area        -5.799e-04  2.627e-05 -22.074  &lt; 2e-16 ***
+Elevation    3.541e-03  8.741e-05  40.507  &lt; 2e-16 ***
+Nearest      8.826e-03  1.821e-03   4.846 1.26e-06 ***
+Scruz       -5.709e-03  6.256e-04  -9.126  &lt; 2e-16 ***
+Adjacent    -6.630e-04  2.933e-05 -22.608  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 3510.73  on 29  degrees of freedom
+Residual deviance:  716.85  on 24  degrees of freedom
+AIC: 889.68
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<p>p value of elevation is &lt; 2e-16.</p>
+<p><strong>(b) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>mod2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Species <span class="sc">~</span> . <span class="sc">-</span>Endemics <span class="sc">-</span>Elevation, <span class="at">data =</span> gala, <span class="at">family =</span> poisson)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>deviance_dff <span class="ot">&lt;-</span> mod2<span class="sc">$</span>deviance <span class="sc">-</span> mod<span class="sc">$</span>deviance</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pchisq</span>(deviance_dff, <span class="dv">1</span>, <span class="at">lower =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>p value is 0.</p>
+<p><strong>(c) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>px <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">residuals</span>(mod2, <span class="at">type =</span> <span class="st">"pearson"</span>)<span class="sc">^</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pchisq</span>(px, <span class="dv">1</span>, <span class="at">lower =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>p value is 0.</p>
+<p><strong>(d) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>(dp <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">residuals</span>(mod, <span class="at">type=</span><span class="st">"pearson"</span>)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>mod<span class="sc">$</span>df.res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 31.74914</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod,<span class="at">dispersion=</span>dp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = Species ~ . - Endemics, family = poisson, data = gala)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  3.1548079  0.2915897  10.819  &lt; 2e-16 ***
+Area        -0.0005799  0.0001480  -3.918 8.95e-05 ***
+Elevation    0.0035406  0.0004925   7.189 6.53e-13 ***
+Nearest      0.0088256  0.0102621   0.860    0.390    
+Scruz       -0.0057094  0.0035251  -1.620    0.105    
+Adjacent    -0.0006630  0.0001653  -4.012 6.01e-05 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for poisson family taken to be 31.74914)
+
+    Null deviance: 3510.73  on 29  degrees of freedom
+Residual deviance:  716.85  on 24  degrees of freedom
+AIC: 889.68
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<p>p value is 6.53e-13</p>
+<p><strong>(e) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sandwich)</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>se <span class="ot">&lt;-</span> mod <span class="sc">|&gt;</span></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vcovHC</span>() <span class="sc">|&gt;</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diag</span>() <span class="sc">|&gt;</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> mod<span class="sc">$</span>coef[<span class="st">'Elevation'</span>] <span class="sc">/</span> se[<span class="st">'Elevation'</span>]</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>z</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Elevation 
+ 2.965378 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">pnorm</span>(<span class="fu">abs</span>(z)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Elevation 
+0.003023114 </code></pre>
+</div>
+</div>
+<p>p value is 0.003023114</p>
+<p><strong>(f) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(robust)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: fit.models</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">300</span>) </span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="fu">glmRob</span>(Species <span class="sc">~</span> . <span class="sc">-</span>Endemics, <span class="at">data =</span> gala, <span class="at">family =</span> poisson) <span class="sc">|&gt;</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call: glmRob(formula = Species ~ . - Endemics, family = poisson, data = gala)
+Deviance Residuals:
+     Min       1Q   Median       3Q      Max 
+  0.7319  65.2010  87.6696 144.7517 191.1331 
+
+Coefficients:
+            Estimate Std. Error    z value Pr(&gt;|z|)
+(Intercept)  -103363   0.429314 -2.408e+05        0
+Area         -142913   0.001843 -7.754e+07        0
+Elevation       1650   4.607764  3.581e+02        0
+Nearest        11234   0.608225  1.847e+04        0
+Scruz            569   8.459854  6.726e+01        0
+Adjacent        3454   0.018431  1.874e+05        0
+
+(Dispersion Parameter for poisson family taken to be 1 )
+
+    Null Deviance: 21190 on 29 degrees of freedom
+
+Residual Deviance: NaN on 24 degrees of freedom
+
+Number of Iterations: 50 
+
+Correlation of Coefficients:
+          (Intercept) Area   Elevation Nearest Scruz 
+Area      2.3293                                     
+Elevation 0.4293      1.0000                         
+Nearest   0.4293      1.0000 1.0000                  
+Scruz     0.4293      1.0000 1.0000    1.0000        
+Adjacent  0.4293      1.0000 1.0000    1.0000  1.0000</code></pre>
+</div>
+</div>
+<p>p value is 0</p>
+<p><strong>(g) Answer:</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>gala <span class="sc">|&gt;</span></span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">devres  =</span> <span class="fu">residuals</span>(mod, <span class="at">type =</span> <span class="st">"deviance"</span>),</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">linpred =</span> <span class="fu">predict</span>(mod, <span class="at">type =</span> <span class="st">"link"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> linpred, <span class="at">y =</span> devres)) <span class="sc">+</span> </span>
+<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="fu">hat</span>(eta)), <span class="at">y =</span> <span class="st">"Deviance residual"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-47-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>gala <span class="sc">|&gt;</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">resres  =</span> <span class="fu">residuals</span>(mod, <span class="at">type =</span> <span class="st">"response"</span>),</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">linpred =</span> <span class="fu">predict</span>(mod, <span class="at">type =</span> <span class="st">"link"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> linpred, <span class="at">y =</span> resres)) <span class="sc">+</span> </span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="fu">hat</span>(eta)), <span class="at">y =</span> <span class="st">"Response residual"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-48-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">halfnorm</span>(<span class="fu">rstudent</span>(mod))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-49-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>gali <span class="ot">&lt;-</span> <span class="fu">influence</span>(mod)</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">halfnorm</span>(gali<span class="sc">$</span>hat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hw4sol_files/figure-html/unnamed-chunk-50-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>All six results show <code>elevation</code> is a significant predictor. The p values are 0, 0, 0, 6.53e-13, 0.003023114, 0. Although all of them have the same inference, we should use robust estimation since there is overdispersion and outliers.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      return note.innerHTML;
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

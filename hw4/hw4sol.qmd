@@ -1,0 +1,536 @@
+---
+title: "Biostat 200C Homework 4"
+subtitle: Due May 24 @ 11:59PM
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+```{r}
+library(faraway)
+library(ggplot2)
+library(MASS)
+```
+
+## Q1. ELMR Excercise 7.5 (p150)
+
+**(a) Answer:**
+
+```{r}
+data(debt)
+```
+
+```{r}
+debt$ccarduse <- factor(debt$ccarduse, ordered = TRUE)
+```
+
+```{r}
+#debt$incomegp <- factor(debt$incomegp, ordered = TRUE)
+```
+
+```{r}
+ggplot(debt, aes(x = ccarduse, y = prodebt, color = ccarduse)) + geom_jitter()
+```
+
+Observation with high frequency of credit card usage are more favorable
+to debt.
+
+```{r}
+ggplot(debt, aes(x = incomegp, y = prodebt, color = incomegp)) + geom_jitter()
+
+```
+
+The level of income does not seem to have a strong relationship with the
+preference to debt.
+
+**(b) Answer:**
+
+```{r}
+pomod <- polr(ccarduse ~ ., data = debt)
+summary(pomod)
+```
+
+The 2 most significant predictors are `incomegp` and `bankacc`.
+
+-   `incomegp`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 1.602096 as
+    income increases by one unit.
+
+-   `bankacc`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 1.605149 as
+    having bank account compared to not having bank account.
+
+The 2 least significant predictors are `house` and `children`.
+
+**(c) Answer:**
+
+```{r}
+pomod_least <- polr(ccarduse ~ house, data = debt)
+summary(pomod_least)
+```
+
+```{r}
+0.558 - 1.96*0.1433
+```
+
+The predictor seems to be significant in this model. There is
+contradiction on conclusion between the two models.
+
+**(d) Answer:**
+
+```{r}
+#drop missing values
+
+debt_clean <- na.omit(debt)
+```
+
+```{r}
+pomod_clean <- polr(ccarduse ~ ., data = debt_clean)
+```
+
+```{r}
+pomod_clean_i <- step(pomod_clean)
+```
+
+```{r}
+final_model <- polr(ccarduse ~ incomegp + agegp + bankacc + 
+                      bsocacc + cigbuy + prodebt, data = debt_clean)
+```
+
+```{r}
+summary(final_model)
+```
+
+```{r}
+exp(final_model$coef[1:6])
+```
+
+-   `incomegp`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 1.582267 as
+    income increases by one unit.
+
+-   `agegp`: The odds of moving from credit card usage level 1 to credit
+    card usage level 2 or from credit card usage level 2 to credit card
+    usage level 3 increases by a factor of 1.309391 as age increases by
+    one unit.
+
+-   `bankacc`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 8.0170914 as
+    having bank account compared to not having bank account.
+
+-   `bsocacc`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 1.6566115 as
+    having building society account compared to not having building
+    society account.
+
+-   `cigbuy`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 0.4640734 as the
+    observation buys cigarettes compared to not buying cigarettes.
+
+-   `prodebt`: The odds of moving from credit card usage level 1 to
+    credit card usage level 2 or from credit card usage level 2 to
+    credit card usage level 3 increases by a factor of 1.7568894 as
+    prodebt increases by one unit.
+
+We cannot conclude that dropped predictors have no relation to the
+response. The dropped predictors may have interaction with the remained
+predictors in the model to affect the response.
+
+**(e) Answer:**
+
+```{r}
+l1 = median(debt_clean$incomegp)
+l2 = median(debt_clean$agegp)
+l3 = median(debt_clean$bankacc)
+l4 = median(debt_clean$bsocacc)
+l5 = median(debt_clean$prodebt)
+
+predict(final_model, data.frame(incomegp = l1, agegp = l2, bankacc = l3, bsocacc = l4, prodebt = l5, cigbuy = 1), type = "probs")
+predict(final_model, data.frame(incomegp = l1, agegp = l2, bankacc = l3, bsocacc = l4, prodebt = l5, cigbuy = 0), type = "probs")
+```
+
+Row one in the output is the probability for smoker and row 2 is the
+probability for non-smoker.
+
+**(f) Answer:**
+
+```{r}
+mod_hazard = polr(ccarduse ~ incomegp + agegp + bankacc + bsocacc + cigbuy + prodebt, 
+     method = "cloglog", data = debt_clean)
+```
+
+```{r}
+predict(mod_hazard, data.frame(incomegp = l1, agegp = l2, bankacc = l3, bsocacc = l4, prodebt = l5, cigbuy = 1), type = "probs")
+predict(mod_hazard, data.frame(incomegp = l1, agegp = l2, bankacc = l3, bsocacc = l4, prodebt = l5, cigbuy = 0), type = "probs")
+```
+
+Row one in the output is the probability for smoker and row 2 is the
+probability for non-smoker.
+
+The general trend when comparing row 1 and row2 in the proportional
+hazards model is unchanged compared to the proportional odd smodel.
+Therefore, it does not seem to make a difference to use this type of
+model
+
+## Q2. Moments of exponential family distributions
+
+Show that the exponential family distributions have moments
+\begin{eqnarray*}
+  \mathbb{E}Y &=& \mu = b'(\theta) \\
+  \operatorname{Var}Y &=& \sigma^2 = b''(\theta) a(\phi).
+\end{eqnarray*}
+
+Denote
+$f_y = f(y;\theta,\phi)=\exp\left(\frac{y\theta-b(\theta)}{a(\phi)}+c(y,\phi)\right)$
+
+$l(\theta)=\log(f_y)=\frac{y\theta-b(\theta)}{a(\phi)}+c(y,\phi)$
+
+$l'(\theta)=\frac{y-b'(\theta)}{a(\phi)}$
+
+Since true $\theta$ must maximize $l(\theta)$, we have $E(l'(\theta))=0$
+
+$E(\frac{y-b'(\theta)}{a(\phi)})=0$
+
+$E(Y)=b'(\theta)=\mu$
+
+$l''(\theta)=-\frac{b''(\theta)}{a(\phi)}$
+
+$E(\frac{d^2l}{d\theta^2})=-E[(\frac{dl}{d\theta})^2]$
+
+$E[-\frac{b''(\theta)}{a(\phi)}]=\frac{-b''(\theta)}{a(\phi)}=-\frac{Var(Y)}{[a(\phi)]^2}$
+
+$Var(Y)=b''(\theta)a(\phi)=\sigma^2$
+
+## Q3. Score and information matrix of GLM
+
+Derive the gradient (score), negative Hessian, and Fisher information
+matrix (expected negative Hessian) of GLM.
+
+$l(\beta)=\sum \frac{y_i\theta_i-b(\theta_i)}{a(\phi)}+c(y_i,\phi)$
+
+Assume g is the canonical link function, we have
+$\theta_i=g(\mu_i)=\eta_i=X^T\beta$
+
+$\nabla l(\beta)=\sum \frac{y_i\frac{d\theta_i}{d\beta}-\frac{db(\theta_i)}{d\beta}\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{y_i\frac{d\theta_i}{d\beta}-b'(\theta_i)\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{(y_i-b'(\theta_i))\frac{d\theta_i}{d\beta}}{a(\phi)}=\sum \frac{(y_i-\mu)\mu'}{\sigma^2}x_i$
+
+$-\nabla^2 l(\beta)=\sum\frac{[\mu_i'(\eta_i)]^2}{\sigma_i^2}x_ix_i^T-\frac{(y_i-\mu_i)u_i''(\eta_i)}{\sigma^2}+\frac{(y_i-\mu_i)[\mu_i'(\eta_i)]^2(d\sigma_i^2/d\mu_i)}{\sigma_i^4}x_ix_i^T$
+
+Since $E(y_i)=\mu_i$
+
+$E[-\nabla^2l(\beta)]=\sum\frac{[\mu_i'(\eta_i)]^2}{\sigma_i^2}x_ix_i^T$
+
+## Q4. ELMR Exercise 8.1 (p171)
+
+**(a) Answer:**
+
+We first rewrite the function.
+
+$f(y)=\lambda e^{-\lambda y}=e^{\log(\lambda)-\lambda y}=e^{-\lambda y+\log(\lambda)}$
+
+$\theta = -\lambda$
+
+$\phi = 1$
+
+$a(\phi) = 1$
+
+$b(\theta)=-\log(-\theta)$
+
+$c(y,\phi) = 0$
+
+**(b) Answer:**
+
+$\mu = b'(\theta) = \frac{1}{\lambda}$
+
+$g(\mu) = g(b'(\theta))=g(\frac{1}{-\theta})=\theta=-\frac{1}{\mu}=\eta$
+
+$Var(\mu)=b''(\theta)a(\phi)=\frac{1}{\theta^2}=\mu^2$
+
+**(c) Answer:**
+
+We can end up with negative value for $\lambda$.
+
+**(d) Answer:**
+
+When comparing nested model, a likelihood ratio test should be used
+which assumed $\chi^2$ distribution. F test should only be used when the
+models assumed normal assumption.
+
+**(e) Answer:**
+
+$D(y,\hat{\mu})=2\sum_{i=1}^n \left[y_i(\mu_i-\hat{\mu}_i)-\log(y_i)+b(\hat{\mu}_i)\right]$
+
+## Q5. ELMR Exercise 8.4 (p172)
+
+**(a) Answer:**
+
+```{r}
+data(gala,package="faraway")
+```
+
+```{r}
+mod <- glm(Species ~ . -Endemics, data = gala, family = poisson)
+```
+
+```{r}
+summary(mod)
+```
+
+The values of coefficients and deviances are given in the output above.
+
+**(b) Answer:**
+
+$\eta=\log(\mu)$, $\frac{d\eta}{d\mu}=\frac{1}{\mu}$, $V(\mu)=\mu$,
+$w_i=\mu_i$
+
+$z_i=\eta_i+\frac{y_i-\mu_i}{w_i}=\log(\mu_i)+\frac{y_i-\mu_i}{\mu_i}$
+
+**(c) Answer:**
+
+```{r}
+y <- gala$Species
+mu <- y
+eta <- log(mu)
+w <- mu
+z <- eta + (y-mu)/mu
+lmod <- lm(z  ~ . -Species -Endemics, weights=w, gala)
+coef(lmod)
+```
+
+```{r}
+coef(mod)
+```
+
+The coefficients are quite close.
+
+**(d) Answer:**
+
+```{r}
+y <- gala$Species
+eta <- lmod$fit
+mu <- exp(eta)
+
+w <- mu
+
+z <- eta + (y-mu)/mu
+
+lmod <- lm(z  ~ . -Species -Endemics, weights=w, gala)
+
+2 * sum(y * log(y / mu) - (y - mu), na.rm = TRUE)
+```
+
+```{r}
+summary(mod)
+```
+
+The deviance after the first iteration is 828.0096 which is larger than
+716.85 which is the deviance of the GLM.
+
+**(e) Answer:**
+
+```{r}
+y <- gala$Species
+eta <- lmod$fit
+mu <- exp(eta)
+
+w <- mu
+
+z <- eta + (y - mu)/mu
+
+lmod <- lm(z ~ . -Species -Endemics, weights=w, gala)
+```
+
+```{r}
+lmod$coef
+```
+
+```{r}
+2 * sum(y * log(y / mu) - (y - mu), na.rm = TRUE)
+```
+
+The deviance after this iteration is 719.4158 which is more close to the
+deviance of the GLM. The coefficient given in this iteration also gets
+closer to the coefficients of GLM.
+
+**(f) Answer:**
+
+```{r}
+y <- gala$Species
+
+deviance = 2 * sum(y * log(y / mu) - (y - mu), na.rm = TRUE)
+
+for (iter in 1:10) {
+  eta <- lmod$fit
+  mu <- exp(eta)
+  w <- mu
+  z <- eta + (y - mu)/mu
+  lmod <- lm(z ~ . -Species -Endemics, weights=w, gala)
+  curr_deviance <- 2 * sum(y * log(y / mu) - (y - mu), na.rm = TRUE)
+  print(curr_deviance)
+  if (abs(deviance - curr_deviance) < 0.0001) {
+    break
+  }
+  deviance = curr_deviance
+}
+```
+
+```{r}
+lmod$coef
+```
+
+```{r}
+mod$coef
+```
+
+They are exactly the same.
+
+**(g) Answer:**
+
+```{r}
+xm <- model.matrix(lmod)
+wm <- diag(w)
+
+#Standard error
+sqrt(diag(solve(t(xm) %*% wm %*% xm)))
+```
+
+```{r}
+summary(mod)
+```
+
+They are exactly the same.
+
+## Q6. ELMR Exercise 8.5 (p172)
+
+**(a) Answer:**
+
+```{r}
+mod <- glm(Species ~ . -Endemics, data = gala, family = poisson)
+```
+
+```{r}
+summary(mod)
+```
+
+p value of elevation is \< 2e-16.
+
+**(b) Answer:**
+
+```{r}
+mod2 <- glm(Species ~ . -Endemics -Elevation, data = gala, family = poisson)
+```
+
+```{r}
+deviance_dff <- mod2$deviance - mod$deviance
+```
+
+```{r}
+pchisq(deviance_dff, 1, lower = FALSE)
+```
+
+p value is 0.
+
+**(c) Answer:**
+
+```{r}
+px <- sum(residuals(mod2, type = "pearson")^2)
+```
+
+```{r}
+pchisq(px, 1, lower = FALSE)
+```
+
+p value is 0.
+
+**(d) Answer:**
+
+```{r}
+(dp <- sum(residuals(mod, type="pearson")^2)/mod$df.res)
+```
+
+```{r}
+summary(mod,dispersion=dp)
+```
+
+p value is 6.53e-13
+
+**(e) Answer:**
+
+```{r}
+library(sandwich)
+
+se <- mod |>
+  vcovHC() |>
+  diag() |>
+  sqrt()
+```
+
+```{r}
+z <- mod$coef['Elevation'] / se['Elevation']
+z
+```
+
+```{r}
+2 * (1 - pnorm(abs(z)))
+```
+
+p value is 0.003023114
+
+**(f) Answer:**
+
+```{r}
+library(robust)
+
+set.seed(300) 
+
+glmRob(Species ~ . -Endemics, data = gala, family = poisson) |>
+  summary()
+```
+
+p value is 0
+
+**(g) Answer:**
+
+```{r}
+gala |>
+  dplyr::mutate(devres  = residuals(mod, type = "deviance"),
+         linpred = predict(mod, type = "link")) |>
+  ggplot() + 
+  geom_point(mapping = aes(x = linpred, y = devres)) + 
+  labs(x = expression(hat(eta)), y = "Deviance residual")
+```
+
+```{r}
+gala |>
+  dplyr::mutate(resres  = residuals(mod, type = "response"),
+         linpred = predict(mod, type = "link")) |>
+  ggplot() + 
+  geom_point(mapping = aes(x = linpred, y = resres)) + 
+  labs(x = expression(hat(eta)), y = "Response residual")
+```
+
+```{r}
+halfnorm(rstudent(mod))
+```
+
+```{r}
+gali <- influence(mod)
+halfnorm(gali$hat)
+```
+
+All six results show `elevation` is a significant predictor. The p
+values are 0, 0, 0, 6.53e-13, 0.003023114, 0. Although all of them have the
+same inference, we should use robust estimation since there is overdispersion and outliers. 

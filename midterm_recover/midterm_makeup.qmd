@@ -1,0 +1,1001 @@
+---
+title: "Biostat 200C Midterm Makeup"
+subtitle: Due June 14 @ 11:59PM
+author: "Hanbei Xiong 605-257-780"
+format:
+  html:
+    theme: cosmo
+    embed-resources: true
+    number-sections: true
+    toc: true
+    toc-depth: 4
+    toc-location: left
+    code-fold: false
+engine: knitr
+knitr:
+  opts_chunk: 
+    fig.align: 'center'
+    # fig.width: 6
+    # fig.height: 4
+    message: FALSE
+    cache: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+```{r}
+# if (!require("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+# BiocManager::install("msd16s")
+
+# BiocManager::install("metagenomeSeq")
+suppressMessages(library(metagenomeSeq))
+library(msd16s)
+library(tidyverse)
+library(broom)
+library(pscl)
+library(VennDiagram)
+```
+
+# Data Preparation
+
+```{r}
+data(msd16s)
+msd16s
+```
+```{r}
+phenoData(msd16s)
+```
+```{r}
+pheno_tbl <- rownames_to_column(pData(msd16s), var = "ID") %>% as_tibble()
+```
+
+```{r}
+p_case_control = pheno_tbl %>% 
+  count(Type) %>% 
+  mutate(prop = n/sum(n))
+
+p_case <- with(p_case_control, prop[Type == "Case"])
+p_control <- with(p_case_control, prop[Type == "Control"])
+```
+
+```{r}
+featureData(msd16s)
+```
+
+```{r}
+features <- fData(msd16s)
+```
+
+
+```{r}
+counts <- MRcounts(msd16s, norm = TRUE)
+dim(counts)
+```
+
+```{r}
+otu_id <- rownames(counts)
+counts_tbl <- bind_cols(otu_id = otu_id, counts %>% as_tibble())
+```
+
+```{r}
+control_to_select <- pheno_tbl %>% 
+  filter(Type == "Control") %>% 
+  dplyr::select(ID) %>% 
+  pull()
+
+con_sum <- counts_tbl %>%
+  dplyr::select(all_of(control_to_select)) %>% 
+  rowSums() 
+
+case_to_select <- pheno_tbl %>% 
+  filter(Type == "Case") %>% 
+  dplyr::select(ID) %>% 
+  pull()
+
+case_sum <- counts_tbl %>%
+  dplyr::select(all_of(case_to_select)) %>% 
+  rowSums() 
+
+counts_tbl_filt <- bind_cols(counts_tbl, 
+                             con_sum = con_sum/length(control_to_select), 
+                             case_sum = case_sum/length(case_to_select)) %>%
+  filter(con_sum >= 12 | case_sum >= 12) 
+```
+
+```{r}
+otu_prevalence <- counts_tbl_filt %>%
+  dplyr:: select(-otu_id) %>%
+  mutate(across(everything(), ~ as.integer(. > 0))) %>%
+  rowSums()
+  
+counts_tbl <- bind_cols(counts_tbl_filt, otu_prevalence = otu_prevalence) %>%
+  filter(otu_prevalence >= 10) %>%
+  dplyr:: select(-con_sum, -case_sum, -otu_prevalence)
+```
+
+```{r}
+counts_tbl_t <- counts_tbl %>% 
+  pivot_longer(cols= -1) %>% 
+  pivot_wider(names_from = "otu_id",values_from = "value") %>%
+  rename(ID = name) %>% 
+  left_join(pheno_tbl, by = "ID") 
+```
+
+## Filter Data at Genus level
+
+```{r}
+genus_counts = aggTax(msd16s, lvl = "genus", out = "matrix", norm = F)
+genus_id <- rownames(genus_counts)
+genus_counts_tbl <- bind_cols(genus_id = genus_id, genus_counts %>% as_tibble())
+genus_counts_tbl
+```
+
+```{r}
+con_mean <- genus_counts_tbl %>%
+  dplyr:: select(all_of(control_to_select)) %>% 
+  rowMeans() 
+
+case_mean <- genus_counts_tbl %>%
+  dplyr:: select(all_of(case_to_select)) %>% 
+  rowMeans() 
+
+genus_tbl_filt <- bind_cols(genus_counts_tbl, 
+                             con_mean = con_mean, 
+                             case_mean = case_mean) %>%
+  filter(con_mean >= 12 | case_mean >= 12) 
+```
+
+```{r}
+otu_prevalence <- genus_tbl_filt %>%
+  dplyr:: select(-genus_id) %>%
+  mutate(across(everything(), ~ as.integer(. > 0))) %>%
+  rowSums()
+  
+genus_tbl <- bind_cols(genus_tbl_filt, otu_prevalence = otu_prevalence) %>%
+  filter(otu_prevalence >= 10) %>%
+  dplyr:: select(-con_mean, -case_mean, -otu_prevalence) %>% 
+  filter(genus_id != "NA")
+
+rm(genus_tbl_filt)
+
+genusnames = genus_tbl$genus_id 
+```
+
+```{r}
+genus_tbl_t <- genus_tbl %>% 
+  pivot_longer(cols= -1) %>% 
+  pivot_wider(names_from = "genus_id",values_from = "value") %>%
+  rename(ID = name) %>% 
+  left_join(pheno_tbl, by = "ID")  # %>%
+  #dplyr::select(-`NA`)
+```
+
+## Filter Data at Species level
+
+```{r}
+species_counts = aggTax(msd16s, lvl = "species", out = "matrix", norm = F)
+species_id <- rownames(species_counts)
+species_counts_tbl <- bind_cols(species_id = species_id, species_counts %>% as_tibble())
+```
+
+```{r}
+con_mean <- species_counts_tbl %>%
+  dplyr:: select(all_of(control_to_select)) %>% 
+  rowMeans() 
+
+case_mean <- species_counts_tbl %>%
+  dplyr:: select(all_of(case_to_select)) %>% 
+  rowMeans() 
+
+species_tbl_filt <- bind_cols(species_counts_tbl, 
+                             con_mean = con_mean, 
+                             case_mean = case_mean) %>%
+  filter(con_mean >= 12 | case_mean >= 12) 
+```
+
+```{r}
+otu_prevalence <- species_tbl_filt %>%
+  dplyr:: select(-species_id) %>%
+  mutate(across(everything(), ~ as.integer(. > 0))) %>%
+  rowSums()
+  
+species_tbl <- bind_cols(species_tbl_filt, otu_prevalence = otu_prevalence) %>%
+  filter(otu_prevalence >= 10) %>%
+  dplyr:: select(-con_mean, -case_mean, -otu_prevalence)
+
+rm(species_tbl_filt)
+speciesnames = species_tbl$species_id[-1*which(species_tbl$species_id == "NA")]
+```
+
+
+
+```{r}
+species_tbl_t <- species_tbl %>% 
+  pivot_longer(cols= -1) %>% 
+  pivot_wider(names_from = "species_id",values_from = "value") %>%
+  rename(ID = name) %>% 
+  left_join(pheno_tbl, by = "ID") %>%
+  dplyr:: select(-`NA`)
+```
+
+
+
+# Q1
+
+## Genus Level
+
+```{r, warning=FALSE}
+compute_qaic <- function(model) {
+  theta <- sum(residuals(model, type = "pearson")^2) / model$df.residual
+  loglik <- logLik(update(model, family = poisson))
+  qaic <- -2 * as.numeric(loglik) + 2 * model$rank * theta
+  return(qaic)
+}
+```
+
+
+
+```{r, warning=FALSE}
+results_genus_qpoisson <- 
+  map_df(genusnames, function(genusnames) {
+    model <- glm(as.formula(paste(genusnames, "~ Type")), 
+                 data = genus_tbl_t, 
+                 family = quasipoisson)
+    qaic <- compute_qaic(model)
+    tidy(model, conf.int = TRUE) %>%
+      # Add a column for the response variable
+      mutate(response_variable = genusnames, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_qppoisson <- results_genus_qpoisson %>% 
+  filter(p.value < 0.05/41) %>%
+  dplyr::select(response_variable, p.value, qaic) %>%
+  print(n = Inf) 
+
+count_qpposson <- result_qppoisson %>%
+  summarise(count = n())
+
+count_qpposson <- count_qpposson$count
+```
+
+
+```{r, warning=FALSE}
+library(MASS)
+
+
+results_genus_nb2 <- 
+  map_df(genusnames, function(genusnames) {
+  #  print(response)
+    model <- glm(as.formula(paste(genusnames, "~ Type")), 
+                 family = negative.binomial(20),
+                 data = genus_tbl_t)
+    qaic <- compute_qaic(model)
+    tidy(model, conf.int = TRUE) %>%
+      # Add a column for the response variable
+      mutate(response_variable = genusnames, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+
+result_nb2 <- results_genus_nb2 %>% 
+  filter(p.value < 0.05/41) %>%
+  dplyr::select(response_variable, p.value, qaic) %>%
+  print(n = Inf) 
+
+count_nb2 <- result_nb2 %>%
+  summarise(count = n())
+
+count_nb2 <- count_nb2$count
+```
+
+
+```{r, warning=FALSE}
+tidy_zeroinfl <- function(model) {
+  coefs <- summary(model)$coefficients
+  count_coefs <- as.data.frame(coefs$count)
+  zero_coefs <- as.data.frame(coefs$zero)
+  
+  tidy_count <- count_coefs %>%
+    rownames_to_column(var = "term") %>%
+    mutate(component = "count")
+  
+  tidy_zero <- zero_coefs %>%
+    rownames_to_column(var = "term") %>%
+    mutate(component = "zero")
+  
+  tidy_model <- bind_rows(tidy_count, tidy_zero)
+  names(tidy_model) <- c("term", "estimate", "std.error", "statistic", "p.value", "component")
+  
+  return(tidy_model)
+}
+```
+
+```{r, warning=FALSE}
+compute_qaic_zeroinfl <- function(model) {
+  # Calculate the theta (dispersion parameter)
+  theta <- sum(residuals(model, type = "pearson")^2) / model$df.residual
+  loglik <- logLik(model)
+  k <- length(coef(model)) + length(model$coefficients$zero)  # Number of parameters
+  qaic <- -2 * as.numeric(loglik) + 2 * k * theta
+  return(qaic)
+}
+```
+
+
+```{r, warning=FALSE}
+results_genus_zfpoisson <- 
+  map_df(genusnames, function(genusnames) {
+  #  print(response)
+    model <- zeroinfl(as.formula(paste(genusnames, "~ Type")), 
+                 data = genus_tbl_t,
+                 dist = "poisson")
+    qaic <- compute_qaic_zeroinfl(model)
+    tidy_zeroinfl(model) %>%
+      # Add a column for the response variable
+      mutate(response_variable = genusnames, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_zfpoisson <- results_genus_zfpoisson %>% 
+  filter(p.value < 0.05/41) %>%
+  dplyr::select(response_variable, p.value, qaic)
+
+count_zfpoisson <- result_zfpoisson %>%
+  summarise(count = n())
+
+count_zfpoisson <- count_zfpoisson$count
+```
+
+```{r, warning=FALSE}
+results_genus_zfnb <- 
+  map_df(genusnames, function(genusnames) {
+  #  print(response)
+    model <- zeroinfl(as.formula(paste(genusnames, "~ Type")), 
+                 data = genus_tbl_t,
+                 dist = "negbin")
+    qaic <- compute_qaic_zeroinfl(model)
+    tidy_zeroinfl(model) %>%
+      # Add a column for the response variable
+      mutate(response_variable = genusnames, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+
+result_zfnb <- results_genus_zfnb %>% 
+  filter(p.value < 0.05/41) %>%
+  dplyr::select(response_variable, p.value, qaic)
+
+count_zfnb <- result_zfnb %>%
+  summarise(count = n())
+
+count_zfnb <- count_zfnb$count
+```
+
+
+
+
+
+```{r}
+tibble::tibble(
+  Model = c("Quasi-Poisson", "Negative Binomial", "Zero Inflated Poisson", "Zero Inflated Negative Binomial"),
+  Significant = c(count_qpposson, count_nb2, count_zfpoisson, count_zfnb)
+)
+```
+
+
+```{r}
+
+
+list_response <- list(
+  "Quasi-Poisson" = result_qppoisson$response_variable,
+  "Negative Binomial" = result_nb2$response_variable,
+  "Zero-Inflated Poisson" = result_zfpoisson$response_variable,
+  "Zero-Inflated Negative Binomial" = result_zfnb$response_variable
+)
+grid.newpage()
+# Generate the Venn diagram
+venn.plot <- venn.diagram(
+  x = list_response,
+  category.names = c("Quasi-Poisson", "Negative Binomial", "Zero-Inflated Poisson", "Zero-Inflated Negative Binomial"),
+  filename = NULL,
+  output = TRUE
+)
+
+# Display the Venn diagram
+grid.draw(venn.plot)
+```
+
+## Species Level
+
+
+
+
+```{r, warning=FALSE}
+results_species_qpoisson <- 
+  map_df(species_names, function(species_names) {
+    model <- glm(as.formula(paste("`", species_names, "`", "~ Type", sep = "")), 
+                 data = species_tbl_t, 
+                 family = quasipoisson)
+    qaic <- compute_qaic(model)
+    tidy(model, conf.int = TRUE) %>%
+      # Add a column for the response variable
+      mutate(response_variable = species_names, qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_species_qpoisson <- results_species_qpoisson %>% 
+  filter(p.value < 0.05/49) %>%
+  dplyr::select(response_variable, p.value, qaic)
+
+
+count_species_qpoisson <- result_species_qpoisson %>%
+  summarise(count = n())
+
+count_species_qpoisson <- count_species_qpoisson$count
+```
+
+
+
+
+
+```{r, warning=FALSE}
+results_species_nb2 <- 
+  map_df(species_names, function(species_names) {
+    model <- glm(as.formula(paste("`", species_names, "`", "~ Type", sep = "")), 
+                 data = species_tbl_t, 
+                 family = negative.binomial(20))
+    qaic <- compute_qaic(model)
+    tidy(model, conf.int = TRUE) %>%
+      # Add a column for the response variable
+      mutate(response_variable = species_names, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_species_nb2 <- results_species_nb2 %>% 
+  filter(p.value < 0.05/49) %>%
+  dplyr::select(response_variable, p.value, qaic) 
+
+
+
+count_species_nb2 <- result_species_nb2 %>%
+  summarise(count = n())
+
+count_species_nb2 <- count_species_nb2$count
+```
+
+```{r}
+results_species_zfpoisson <- 
+  map_df(species_names, function(species_names) {
+    model <- zeroinfl(as.formula(paste("`", species_names, "`", "~ Type", sep = "")),
+                      data = species_tbl_t)
+    qaic <- compute_qaic_zeroinfl(model)
+    tidy_zeroinfl(model) %>%
+      # Add a column for the response variable
+      mutate(response_variable = species_names, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_species_zfpoisson <- results_species_zfpoisson %>% 
+  filter(p.value < 0.05/49) %>%
+  dplyr::select(response_variable, p.value, qaic)
+
+
+
+
+count_species_zfpoisson <- result_species_zfpoisson %>%
+  summarise(count = n())
+
+count_species_zfpoisson <- count_species_zfpoisson$count
+```
+
+```{r, warning=FALSE}
+results_species_zfnb <- 
+  map_df(species_names, function(species_names) {
+    model <- zeroinfl(as.formula(paste("`", species_names, "`", "~ Type", sep = "")),
+                      dist = "negbin",
+                      data = species_tbl_t)
+    qaic <- compute_qaic_zeroinfl(model)
+    tidy_zeroinfl(model) %>%
+      # Add a column for the response variable
+      mutate(response_variable = species_names, qaic = qaic)
+    }) %>% 
+  filter(term == "TypeControl") %>% 
+  arrange(p.value) 
+
+result_species_zfnb <- results_species_zfnb %>% 
+  filter(p.value < 0.05/49) %>%
+  dplyr::select(response_variable, p.value, qaic) 
+
+
+
+count_species_zfnb <- result_species_zfnb %>%
+  summarise(count = n())
+
+count_species_zfnb <- count_species_zfnb$count
+```
+
+```{r}
+tibble::tibble(
+  Model = c("Quasi-Poisson", "Negative Binomial", "Zero Inflated Poisson", "Zero Inflated Negative Binomial"),
+  Significant = c(count_species_qpoisson, count_species_nb2, count_species_zfpoisson, count_species_zfnb)
+)
+```
+
+
+
+```{r}
+list_response <- list(
+  "Quasi-Poisson" = result_species_qpoisson$response_variable,
+  "Negative Binomial" = result_species_nb2$response_variable,
+  "Zero-Inflated Poisson" = result_species_zfpoisson$response_variable,
+  "Zero-Inflated Negative Binomial" = result_species_zfnb$response_variable
+)
+grid.newpage()
+# Generate the Venn diagram
+venn.plot <- venn.diagram(
+  x = list_response,
+  category.names = c("Quasi-Poisson", "Negative Binomial", "Zero-Inflated Poisson", "Zero-Inflated Negative Binomial"),
+  filename = NULL,
+  output = TRUE
+)
+
+# Display the Venn diagram
+grid.draw(venn.plot)
+```
+
+
+# Q2
+
+## Genus Level
+
+
+
+```{r}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- dim(genus_tbl_t)[1] 
+set.seed(10)
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(genusname) {
+  sim_tbl <- tibble(
+    y = genus_tbl_t %>% dplyr::select(all_of(genusname)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+           nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy(glm(reformulate(.x, response = "y"), 
+                             data = sim_tbl,                              
+                             family = quasipoisson)), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(genus_name = genusnames, 
+       etype_1_error = map_dbl(genusnames, type1e)) 
+median_qpoisson_genus <- median(type1e_tbl$etype_1_error)
+iqr_qpoisson_genus <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+```{r}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- dim(genus_tbl_t)[1] 
+set.seed(10)
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(genusname) {
+  sim_tbl <- tibble(
+    y = genus_tbl_t %>% dplyr::select(all_of(genusname)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+           nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy(glm(reformulate(.x, response = "y"), 
+                             data = sim_tbl, 
+                             family = negative.binomial(20),
+                             control = glm.control(maxit = 100))), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(genus_name = genusnames, 
+       etype_1_error = map_dbl(genusnames, type1e)) 
+
+median_nb_genus <- median(type1e_tbl$etype_1_error)
+iqr_nb_genus <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+```{r, warning=FALSE}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- dim(genus_tbl_t)[1] 
+set.seed(10)
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(genusname) {
+  sim_tbl <- tibble(
+    y = genus_tbl_t %>% dplyr::select(all_of(genusname)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+           nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy_zeroinfl(zeroinfl(reformulate(.x, response = "y"),
+                                           data = sim_tbl,
+                                           control = zeroinfl.control(maxit = 100))),
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(genus_name = genusnames, 
+       etype_1_error = map_dbl(genusnames, type1e)) 
+
+median_zfpoisson_genus <- median(type1e_tbl$etype_1_error)
+iqr_zfpoisson_genus <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+```{r, warning=FALSE}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- dim(genus_tbl_t)[1] 
+set.seed(10)
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(genusname) {
+  sim_tbl <- tibble(
+    y = genus_tbl_t %>% dplyr::select(all_of(genusname)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+           nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy_zeroinfl(zeroinfl(reformulate(.x, response = "y"),
+                                           data = sim_tbl,
+                                           dist = "negbin",
+                                           control = zeroinfl.control(maxit = 100))),
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value <0.05, na.rm = TRUE))
+}
+
+type1e_tbl = tibble(genus_name = genusnames, 
+       etype_1_error = map_dbl(genusnames, type1e)) 
+
+median_zfnb_genus <- median(type1e_tbl$etype_1_error)
+iqr_zfnb_genus <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+
+## Species Level
+
+```{r}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- 992 
+set.seed(10)
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(speciesnames) {
+  sim_tbl <- tibble(
+    y = species_tbl_t %>% dplyr::select(all_of(speciesnames)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+          nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy(glm(reformulate(.x, response = "y"), 
+                             data = sim_tbl), family = quasipoisson), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(
+       species_name = speciesnames, 
+       etype_1_error = map_dbl(speciesnames, type1e))
+median_gpoisson_species <- median(type1e_tbl$etype_1_error)
+iqr_qpoisson_species <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+
+```
+
+```{r}
+# Set the number of columns
+num_columns <- 100
+num_rows <- 992
+
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(speciesname) {
+  sim_tbl <- tibble(
+    y = species_tbl_t %>% 
+      dplyr::select(all_of(speciesname)) %>% pull, 
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)),
+           nrow = num_rows, ncol = num_columns, 
+           dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+    results <- map_df(names(sim_tbl)[-1], 
+                 ~ tidy(glm(reformulate(.x, response = "y"), 
+                             data = sim_tbl, 
+                             family = negative.binomial(30),
+                             control = glm.control(maxit = 100))), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(
+       species_name = speciesnames, 
+       etype_1_error = map_dbl(speciesnames, type1e))
+median_nb_species <- median(type1e_tbl$etype_1_error)
+iqr_nb_species <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+
+
+```{r, warning=FALSE}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- 992 
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(speciesnames) {
+  sim_tbl <- tibble(
+    y = species_tbl_t %>% dplyr::select(all_of(speciesnames)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+          nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy_zeroinfl(zeroinfl(reformulate(.x, response = "y"),
+                                           data = sim_tbl)), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  return(mean(results$p.value < 0.05))
+}
+
+type1e_tbl = tibble(
+       species_name = speciesnames, 
+       etype_1_error = map_dbl(speciesnames, type1e))
+median_zfpoisson_species <- median(type1e_tbl$etype_1_error)
+iqr_zfpoisson_species <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+```{r, warning=FALSE}
+# Set the number of columns 
+num_columns <- 100
+num_rows <- 992 
+
+# Generate the tibble with 100 columns of random normal values
+type1e <- function(speciesnames) {
+  sim_tbl <- tibble(
+    y = species_tbl_t %>% dplyr::select(all_of(speciesnames)) %>% pull,
+    as_tibble(
+    matrix(sample(0:1, num_columns * num_rows, replace=T, prob=c(p_control, p_case)), 
+          nrow = num_rows, ncol = num_columns, 
+         dimnames = list(NULL, paste0("x", 1:num_columns)))))
+  results <- map_df(names(sim_tbl)[-1], 
+                  ~ tidy_zeroinfl(zeroinfl(reformulate(.x, response = "y"),
+                                           data = sim_tbl,
+                                           dist = "negbin",
+                                           control = zeroinfl.control(maxit = 100))), 
+                  .id = "variable") %>%
+              filter(term != "(Intercept)")
+  
+  return(mean(results$p.value <0.05, na.rm = TRUE))
+}
+
+type1e_tbl = tibble(
+       species_name = speciesnames, 
+       etype_1_error = map_dbl(speciesnames, type1e))
+
+median_zfnb_species <- median(type1e_tbl$etype_1_error)
+iqr_zfnb_species <- IQR(type1e_tbl$etype_1_error, na.rm = TRUE)
+```
+
+
+
+```{r}
+tibble::tibble(
+  Method = c("Quasi-Poisson", "Negative Binomial", "Zero Inflated Poisson", "Zero Inflated Negative Binomial"),
+  Genus = c(
+    paste0(round(median_qpoisson_genus, 3), " (IQR: ", round(iqr_qpoisson_genus, 3), ")"),
+    paste0(round(median_nb_genus, 3), " (IQR: ", round(iqr_nb_genus, 3), ")"),
+    paste0(round(median_zfpoisson_genus, 3), " (IQR: ", round(iqr_zfpoisson_genus, 3), ")"),
+    paste0(round(median_zfnb_genus, 3), " (IQR: ", round(iqr_zfnb_genus, 3), ")")
+  ),
+  Species = c(
+    paste0(round(median_gpoisson_species, 3), " (IQR: ", round(iqr_qpoisson_species, 3), ")"),
+    paste0(round(median_nb_species, 3), " (IQR: ", round(iqr_nb_species, 3), ")"),
+    paste0(round(median_zfpoisson_species, 3), " (IQR: ", round(iqr_zfpoisson_species, 3), ")"),
+    paste0(round(median_zfnb_species, 3), " (IQR: ", round(iqr_zfnb_species, 3), ")")
+  )
+)
+
+```
+
+
+# Q3
+
+```{r}
+mean(result_qppoisson$qaic)
+mean(result_nb2$qaic)
+mean(result_zfpoisson$qaic)
+mean(result_zfnb$qaic)
+```
+
+```{r}
+mean(result_species_qpoisson$qaic)
+mean(result_species_nb2$qaic)
+mean(result_species_zfpoisson$qaic)
+mean(result_species_zfnb$qaic)
+```
+
+
+
+By observing the QAIC(A similar measure of goodness of fit as AIC), the zero inflated negative bionomial model seems to be the best fit to model the data.
+
+By observing the type I error, we can see that the quasi poisson model has the smallest type I error. The zero inflated poisson model has the highest type I error. The zero inflated negative binomial model also has very high type I error. The negative binomial model has small type I error closed to quasi binomial model. We can conclude that zero-inflated model inflates the type I error. 
+
+Based on these information, I would conclude that using quasi-binomial model is the most ideal case among the four models. Although it has the highest QAIC, it has the smallest type I error. 
+
+To summarize the result of quasi-binomial model, we have QAIC = 392699.5 for Genus and QAIC = 574885.3 for Species. The type I error is 0.05 for Genus and 0.04 for Species. 
+
+# Redo Midterm question
+
+## Question 2
+
+
+### 2.1
+
+The deviance of fitted model = 0.95443=residual deviance
+
+Since $AIC = -2 \text{(log-likelihood of fitted model)} + 2p$
+
+$\text{log-likelihood of fitted model}=\frac{37.666-2*4}{-2}=-14.833$
+
+### 2.2
+
+$H_0$: 2 models are not distinguishable $(\beta_1=\beta_2=\beta_3=0)$
+
+$H_A$: 2 models are distinguishable (at least one $\beta_i \neq 0$)
+
+When df = 4, the p value for critical value 0.95443 is between 0.1 and 0.9 which is greater than 0.05. Hence, we do not have enough evidence to conclude fitted model and saturated model are significantly different. Hence, the fitted model is a good fit to the data.
+
+### 2.3
+
+$D_{null}-D_w=21.33202-0.95443=20.37759$
+
+$Df_{null}-Df_w=7-4=3$
+
+According to the table of Chi-square distribution, the p-value is less than 0.001.
+
+Hence, we conclude 3 predictors provide a significant better fit than the intercept only model.
+
+### 2.4
+
+$\log (\frac{p_1}{1-p_i})=-2.6163+0.6223sex_i + 0.6157age_i+0.362 ecg_i$
+
+$log(odd) = -2.6163+0.6223+0.6157+0.362=-1.0163$
+
+$odd = e^{-1.0163}\approx 0.3619$
+
+### 2.5
+
+8 parameters in model. The deviance will be 0 since when number of parameter is equivalent to number of observation, we have a saturated model which has deviance 0.
+
+### 2.6
+
+Hessian is $\sum_i[-(x_i^T)^T(\frac{1}{(1+e^{x_i^T\beta})^2})(e^{x_i^T\beta})(x_i^T)]$
+
+For all vectors $a$,
+
+$$\sum_i[a^T(x_i^T)^T(\frac{1}{(1+e^{x_i^T\beta})^2})(e^{x_i^T\beta})(x_i^T)a]=\sum_i[(x_i^Ta)^T(\frac{e^{x_i^T\beta}}{(1+e^{x_i^T\beta})^2})(x_i^Ta)]=\sum_i[(x_i^Ta)^2(\frac{e^{x_i^T\beta}}{(1+e^{x_i^T\beta})^2})$$
+
+Since exponential function is always positive, the Hessian matrix is positive semidefinite by Energy-based definition. Therefore, the log-likelihood function is concave.
+
+### 2.7
+
+It will be the same as binomial model since the extended bernoulli model is equivalent to the binomial mode.
+
+## Question 8
+
+
+### 8.1
+
+3+4=7 parameters in the model
+
+### 8.2
+
+
+$OR=\frac{1}{exp(\theta_1-40\beta_{age}-\beta_{gender}-\beta_{smoke})}$
+
+### 8.3
+
+$OR=exp(-\beta_{smoke}-\beta_{npt})$
+
+### 8.4
+
+$OR = exp(\beta_{smoke}+\beta_{npt})$
+
+### 8.5
+
+$OR=exp(-\beta_{smoke}-\beta_{npt})$
+
+# Optional
+
+## 4
+
+### 4.1
+
+Since we matched on gae, it is difficult to interpret the effect of age on the outcome variable.
+
+### 4.2
+
+$OR = exp(0.66698)=1.94834$
+
+### 4.3
+
+The log likelihood of a conditional logistic model is the same as the log likelihood of a Cox model with a particular data structure. 
+
+
+### 4.4 
+
+When cases are matched with controls based on specific criteria, conditional logistic regression accounts for these matched pairs.
+
+## 6
+
+### 6.1
+
+(4-1)*5 = 15 parameters in the model
+
+### 6.2
+
+$exp(\beta_{2,0}+40\beta_{2,age}+\beta_{2,gender}+hpt\times \beta_{2,hpt})$
+
+### 6.3
+
+$exp(\beta_{1,gender})$
+
+### 6.4
+
+$H_0: \beta_{1,smoke}=\beta_{2,smoke}=\beta_{3,smoke}=\beta_{1,npt}=\beta_{2,npt}=\beta_{3,npt}=0$
+
+Test statistic: $LR = 2(Deviance_{\text{all parameters except smoke and npt}}-Deviance_{\text{all parameters}})\sim \chi_6^2$
+
+### 6.5
+
+6
+
+## 9
+
+(1) logit link, $\eta=g(p)=\log(\frac{p}{1-p})$, corresponds to logistic distribution for the latent variable.
+
+(2) probit link, $\eta=g(p)=\Phi^{-1}(p)$, corresponds to the standard normal distribution for the latent variable.
+
+(3) complementary log-log link, $\eta=g(p)=\log(-\log(1-p))$, corresponds to the Gumbel distribution for the latent variable.
+
+

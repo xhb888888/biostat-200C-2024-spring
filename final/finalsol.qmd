@@ -1,0 +1,654 @@
+---
+title: "Biostat 200C Final"
+subtitle: Due June 14 @ 11:59PM
+author: "Hanbei Xiong 605-257-780"
+format:
+  html:
+    theme: cosmo
+    embed-resources: true
+    number-sections: true
+    toc: true
+    toc-depth: 4
+    toc-location: left
+    code-fold: false
+engine: knitr
+knitr:
+  opts_chunk: 
+    fig.align: 'center'
+    # fig.width: 6
+    # fig.height: 4
+    message: FALSE
+    cache: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+library(tidyverse)
+library(faraway)
+library(survival)
+library(ggfortify)
+library(MASS)
+library(lme4)
+library(geepack)
+library(pbkrtest)
+library(mgcv)
+```
+
+## Q1. (25 pts) Survival data analysis
+
+### 1.1
+
+Consider following survival times of 25 patients with no history of chronic diesease (`chr = 0`) and 25 patients with history of chronic disease (`chr = 1`). + indicates right-censored times.
+
+Group 1 (`chr=0`): 12.3+, 5.4, 8.2, 12.2+, 11.7, 10.0, 5.7, 9.8, 2.6, 11.0, 9.2, 12.1+, 6.6, 2.2, 1.8, 10.2, 10.7, 11.1, 5.3, 3.5, 9.2, 2.5, 8.7, 3.8, 3.0.
+
+Group 2 (`chr=1`): 5.8, 2.9, 8.4, 8.3, 9.1, 4.2, 4.1, 1.8, 3.1, 11.4, 2.4, 1.4, 5.9, 1.6, 2.8, 4.9, 3.5, 6.5, 9.9, 3.6, 5.2, 8.8, 7.8, 4.7, 3.9.
+
+1. Manually fill in the missing information in the following tables of ordered failure times for groups 1 (`chr = 0`) and 2 (`chr = 1`). Explain how survival probabilities (last column) are calculated.
+
+Group 1 (`chr = 0`):
+
+| time | n.risk | n.event | survival |
+|------|--------|---------|----------|
+| 1.8  | 25     | 1       | 0.96     |
+| 2.2  | 24     | 1       | 0.92     |
+| 2.5  | 23     | 1       | 0.88     |
+| 2.6  | 22     | 1       | 0.84     |
+| 3.0  | 21     | 1       | 0.80     |
+| 3.5  | 20     | 1       | 0.76     |
+| 3.8  | 19     | 1       | 0.72     |
+| 5.3  | 18     | 1       | 0.68     |
+| 5.4  | 17     | 1       | 0.64     |
+| 5.7  | 16     | 1       | 0.60     |
+| 6.6  | 15     | 1       | 0.56     |
+| 8.2  | 14     | 1       | 0.52     |
+| 8.7  | 13     | 1       | 0.48     |
+| 9.2  | 12     | 2       | 0.40     |
+| 9.8  | 10     | 1       | 0.36     |
+| 10.0 | 9      | 1       | 0.32     |
+| 10.2 | 8      | 1       | 0.28     |
+| 10.7 | 7      | 1       | 0.24     |
+| 11.0 | 6      | 1       | 0.20     |
+| 11.1 | 5      | 1       | 0.16     |
+| 11.7 | 4      | 1       | 0.12     |
+
+Group 2 (`chr = 1`):
+
+| time | n.risk | n.event | survival |
+|------|--------|---------|----------|
+| 1.4  | 25     | 1       | 0.96     |
+| 1.6  | 24     | 1       | 0.92     |
+| 1.8  | 23     | 1       | 0.88     |
+| 2.4  | 22     | 1       | 0.84     |
+| 2.8  | 21     | 1       | 0.80     |
+| 2.9  | 20     | 1       | 0.76     |
+| 3.1  | 19     | 1       | 0.72     |
+| 3.5  | 18     | 1       | 0.68     |
+| 3.6  | 17     | 1       | 0.64     |
+| 3.9  | 16     | 1       | 0.60     |
+| 4.1  | 15     | 1       | 0.56     |
+| 4.2  | 14     | 1       | 0.52     |
+| 4.7  | 13     | 1       | 0.48     |
+| 4.9  | 12     | 1       | 0.44     |
+| 5.2  | 11     | 1       | 0.40     |
+| 5.8  | 10     | 1       | 0.36     |
+| 5.9  | 9      | 1       | 0.32     |
+| 6.5  | 8      | 1       | 0.28     |
+| 7.8  | 7      | 1       | 0.24     |
+| 8.3  | 6      | 1       | 0.20     |
+| 8.4  | 5      | 1       | 0.16     |
+| 8.8  | 4      | 1       | 0.12     |
+| 9.1  | 3      | 1       | 0.08     |
+| 9.9  | 2      | 1       | 0.04     |
+| 11.4 | 1      | 1       | 0.00     |
+
+$p_{suvival_n} = p_{suvival_{n-1}} \times (\frac{n_{event}-n_{risk}}{n_{risk}})$
+
+
+### 1.2
+
+
+2. Use R to display the Kaplan-Meier survival curves for groups 1 (`chr = 0`) and 2 (`chr = 1`). 
+
+```{r}
+group1_times <- c(12.3, 5.4, 8.2, 12.2, 11.7, 10.0, 5.7, 9.8, 2.6, 11.0, 9.2, 12.1, 6.6, 2.2, 1.8, 10.2, 10.7, 11.1, 5.3, 3.5, 9.2, 2.5, 8.7, 3.8, 3.0)
+group1_status <- c(0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) 
+
+
+group2_times <- c(5.8, 2.9, 8.4, 8.3, 9.1, 4.2, 4.1, 1.8, 3.1, 11.4, 2.4, 1.4, 5.9, 1.6, 2.8, 4.9, 3.5, 6.5, 9.9, 3.6, 5.2, 8.8, 7.8, 4.7, 3.9)
+group2_status <- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)  
+
+
+df <- tibble(
+  time = c(group1_times, group2_times),
+  status = c(group1_status, group2_status),
+  chr = c(rep(0, length(group1_times)), rep(1, length(group2_times)))
+)
+
+```
+
+
+```{r}
+kmfit <- survfit(Surv(time, status) ~ chr, data = df)
+```
+
+```{r}
+summary(kmfit)
+```
+```{r}
+autoplot(kmfit)
+```
+
+
+### 1.3
+
+3. Write down the log-likelihood of the parametric exponential (proportional hazard) model for survival times. Explain why this model can be fit as a generalized linear model with offset.
+
+$l(\beta)=\sum_j (\delta_j \cdot x_j^T\beta-y_je^{x_j^T\beta})=\sum_j\{\delta_j \cdot [x_j^t\beta+\log(y_j)]-y_je^{x_j^T\beta}-\delta_j\log(y_j)\}$
+
+The exponential distribution is a special case of the Weibull distribution with a shape parameter equal to 1, which belongs to the exponential family of distributions. The model can use a log link function to relate the linear predictor $\eta = X_i\beta$ to the hazard function. Regarding the offset, it can be used to incorporate the baseline hazard $h_0$.
+
+### 1.4
+
+4. Fit the exponential (proportional hazard) model on the `chr` data using R. Interpret the coefficients.
+
+```{r}
+glm(status ~ chr + offset(log(time)), family = poisson, data = df) %>%
+  summary()
+```
+Interpretation:
+
+The log hazard is expected to increase by 0.486 for group 2 compared to group 1.
+
+5. Comment on the limitation of exponential model compared to other more flexible models such as Weibull. 
+
+The exponential model assumes a constant hazard rate over time, which is a strong assumption that may not hold in practice. The Weibull model is more flexible as it allows the hazard rate to change over time, which can better capture the true underlying hazard function in many cases. The Weibull model can also model both increasing and decreasing hazard rates, which the exponential model cannot.
+
+## Q2 (25 pts). Longitudinal data analysis 
+
+Onychomycosis, popularly known as toenail fungus, is a fairly common condition that not only can disfigure and sometimes destroy the nail but that also can lead to social and self-image issues for sufferers. Tight-fitting shoes or hosiery, the sharing of common facilities such as showers and locker rooms, and toenail polish are all thought to be implicated in the development of onychomycosis. This question relates to data from a study conducted by researchers that recruited sufferers of a particular type of onychomycosis, dermatophyte onychomycosis. The study conducted by the researchers was focused on comparison of two oral medications, terbinafine (given as 250 mg/day, denoted as treatment 1 below) and itraconazole (given as 200 mg/day, denoted as treatment 2 below). 
+
+The trial was conducted as follows. 200 sufferers of advanced toenail dermatophyte onychomycosis in the big toe were recruited, and each saw a physician, who removed the afflicted nail. Each subject was then randomly assigned to treatment with either terbinafine (treatment 1) or itraconazole (treatment 2). Immediately prior to beginning treatment, the length of the unafflicted part of the toenail (which was hence not removed) was recorded (in millimeters). Then at 1 month, 2 months, 3 months, 6 months, and 12 months, each subject returned, and the length of the unafflicted part of the nail was measured again. A longer unafflicted nail length is a better outcome. Also recorded on each subject was gender and an indicator of the frequency with which the subject visited a gym or health club (and hence might use shared locker rooms and/or showers).
+
+The data are available in the file `toenail.txt` from [here](https://github.com/ucla-biostat-200c/2024spring/tree/master/hw/datasets). The data are presented in the form of one data record per observation; the columns of the data set are as follows:
+
+1. Subject id
+
+2. Health club frequency indicator (= 0 if once a week or less, = 1 if more than once a week)
+
+3. Gender indicator (= 0 if female, = 1 if male)
+
+4. Month
+
+5. Unafflicted nail length (the response, mm)
+
+6. Treatment indicator (= 1 if terbinafine, = 2 if itraconazole)
+
+The researchers had several questions, which they stated to you as follows:
+
+```{r, warning=FALSE}
+toenail <- read_table("toenail.txt", 
+                      col_names=c("subject", "health", "gender",
+                                  "month", "nail_length", "treatment"))
+```
+### 2.1
+
+1. Use the linear mixed effect model (LMM) to answer: Is there a difference in the pattern of change of lengths of the unafflicted part of the nail between subjects receiving terbinafine and itraconazole over a 12 month period? Does one treatment show results more quickly?  
+    
+
+    - Plot the change of lengths of the unafflicted part of the nail over time and separated by treatment groups. Comment on overall patterns over time.
+    
+```{r}
+toenail$health <- as.factor(toenail$health)
+toenail$gender <- as.factor(toenail$gender)
+toenail$treatment <- as.factor(toenail$treatment)
+```
+
+
+```{r}
+
+toenail %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = month, y = nail_length, group = subject)) + 
+  facet_wrap(~ treatment) + 
+  scale_y_log10()
+
+```
+
+It seems like for both treatment and control groups, the nail length increases over time, and the rate of increase seems to be very similar across these 2 groups. There are a few observations which have a sharp decrease of nail length. 
+
+
+It seems like the as time increases, toenail length increases linearly. 
+
+
+    - Based on the pattern observed, pick appropriate time trend in the LMM and provide an algebraic definition for your chosen LMM, e.g., is the linear trend model adequate? or quadratic trend is needed? or any other pattern is more approriate? justify your answer. 
+    
+The algebraic definition for linear mixed model with random intercepts and random slopes is:
+
+
+\begin{align*}
+naillength_{ij}=\mu&+month_{i}\cdot\beta_{month}+treatment_j\cdot\beta_{treatment}+(month_i\times treatment_j)\cdot \beta_{month\times treatment}\\
+&+health_j\cdot\beta_{health}+gender_j\cdot\beta_{gender}+\gamma_{0,j}+month_i\cdot\gamma_{1,j}+\epsilon_{ij}
+\end{align*}
+
+where i indexes year and j indexes individual. 
+
+The random intercept and slope are i.i.d 
+
+\begin{align*}
+  \begin{bmatrix}
+     \gamma_{0,j} \\
+     \gamma_{1,j} 
+  \end{bmatrix} \sim N\left(0, \Sigma\right)
+\end{align*}
+
+and noise term $\epsilon_{ij}$ are i.i.d $N(0, \sigma^2)$
+
+```{r}
+# Linear trend model
+lmm_linear <- lmer(nail_length ~ month * treatment + gender + health + (month | subject), data = toenail)
+
+# Quadratic trend model
+lmm_quadratic <- lmer(nail_length ~ I(month^2) + month * treatment + gender + health + (month | subject), data = toenail)
+
+```
+
+```{r, warning=FALSE}
+KRmodcomp(lmm_linear, lmm_quadratic)
+```
+Since the p value is 0.3992>0.05, we fail to reject the null hypothesis that we conclude there is no difference between the two models. The quadratic trend model is not needed. Therefore, the linear trend model is adequate.
+
+    - Model the covariance: fit both random intercept and random slope model and determine which one fits the data better. 
+    
+```{r}
+lmm_rs <- lmer(nail_length ~ month * treatment + health + gender + (month | subject),
+                   data = toenail)
+lmm_ri <- lmer(nail_length ~ month * treatment + health + gender + (1 | subject),
+                   data = toenail)
+```
+
+```{r}
+aic_comparison <- AIC(lmm_ri, lmm_rs)
+print(aic_comparison)
+
+
+```
+
+Based on the AIC, the model with random slope has smaller AIC than the model with random intercept only. Therefore, we can conclude that the model with random slope fits the data better. 
+
+### 2.2
+
+2. Use the linear mixed effect model (LMM) to answer: Is there an association between the pattern of change of nail lengths and gender and/or health club frequency in subjects taking terbinafine? This might indicate that this drug brings about relief more swiftly in some kinds of subject versus others. 
+
+
+    
+    - Model the covariance: fit both random intercept and random slope model and determine which one fits the data better. 
+
+    - Provide graphs to show patterns the change of nail lengths and gender and/or health club frequency in subjects taking terbinafine. 
+```{r}
+toenail %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = month, y = nail_length, group = subject)) + 
+  facet_wrap(~ gender) + 
+  scale_y_log10() +
+  labs(title = "Nail length over time by gender", x = "Month", y = "Nail Length (log scale)")
+```
+
+    - Based on the pattern observed from question 1, pick appropriate time trend in the LMM and provide an algebraic definition for your chosen LMM, e.g., is the linear trend model adequate? or quadratic trend is needed? or any other pattern is more approriate? justify your answer. 
+
+```{r}
+# Linear trend model
+lmm_linear_gender <- lmer(nail_length ~ month + treatment * gender + health + (month | subject), data = toenail)
+
+# Quadratic trend model
+lmm_quadratic_gender <- lmer(nail_length ~ I(month^2) + month + treatment * gender + health + (month | subject), data = toenail)
+```
+
+
+```{r, warning=FALSE}
+KRmodcomp(lmm_linear_gender, lmm_quadratic_gender)
+```
+
+
+Since the p value for gender is greater than 0.05, we can conclude that the linear trend model is adequate. This is also supported by the graphs.
+
+The alegbraic definition for the chosen LMMs are:
+
+
+\begin{align*}
+naillength_{ij}&=\mu+month_i\cdot\beta_{month}+treatment_j\cdot\beta_{treatment}+gender_j\cdot\beta_{gender}\\
+&+(gender_j\times treatment_j)\cdot \beta_{gender\times treatment}+health_j\cdot\beta_{health}+\gamma_{0,j}+month_i\cdot\gamma_{1,j}+\epsilon_{ij}
+\end{align*}
+
+
+where i indexes year and j indexes individual. 
+
+The random intercept and slope are i.i.d 
+
+\begin{align*}
+  \begin{bmatrix}
+     \gamma_{0,j} \\
+     \gamma_{1,j} 
+  \end{bmatrix} \sim N\left(0, \Sigma\right)
+\end{align*}
+
+and noise term $\epsilon_{ij}$ are i.i.d $N(0, \sigma^2)$
+
+```{r}
+lmm_rs <- lmer(nail_length ~ month + treatment * gender + health + (month | subject), data = toenail)
+lmm_ri <- lmer(nail_length ~ month + treatment * gender + health + (1 | subject), data = toenail)
+```
+
+```{r}
+aic_comparison <- AIC(lmm_ri, lmm_rs)
+print(aic_comparison)
+```
+
+Based on the AIC, the model with random slope has smaller AIC than the model with random intercept only. Therefore, we can conclude that the model with random slope fits the data better. 
+
+
+### 2.3
+
+3. In answering these scientific questions of interest, clearly write out the analytic models you consider for answering these questions (as detailed in the sub-questions). Clearly outline your decision making process for how you selected your final models. Fit your chosen final models and report to the project investigators on the stated scientific questions of interest.
+
+
+
+I will begin with the outline of modeling. We begin with plotting the data to see the trend of nail length over time stratified by the predictor of interest. Since the research questions interest in the interaction between treatment and some predictors, we will include the interaction term in our following models. We fit a linear and quadratic trend model on time to see which one fits the data better. The comparison between two models is using likelihood ratio test based on implementation of anova package in R. After we understand the trend between time and outcome of interest. We will then fit a model with random intercept and random slope to see which one fits the data better while using either the linear or quadratic of time in fixed effect part according to previous examinations. For comparing the random intercept only mixed effect model and random slope mixed effect model, we will use AIC/BIC to see which one fits the data better. After we decide the random effect structure, we will fit the selected model with interaction term between treatment and predictors of interest. We will use the 95% confidence interval of the interaction term to see if there is an association between the pattern of change of nail lengths and predictors of interest. 
+
+For question 1, we model the nail length over time using linear mixed effect model with all covariates in fixed effects and random intercept and random slope using time. We add the interaction term between time and treatment in the fixed effect part.
+
+```{r}
+lmm_rs <- lmer(nail_length ~ month * treatment + health + gender + (month | subject),
+                   data = toenail)
+```
+
+```{r}
+summary(lmm_rs)
+```
+
+```{r, warning=FALSE}
+confint(lmm_rs)
+```
+Based on the confidence interval, we see the 95% confidence interval for `month:treatment2` does not contain 0, which means that treatments is a significant predictor on nail length over month. Since the estimate of `month:treatment2` is 0.14933 which is positive, we can conclude that patients under treatment 2 have a higher nail length over time compared to patients under treatment 1. 
+
+For question 2 about gender, we will fit the following model. We  used all covariates in fixed effects and random intercept and random slope using time. We add the interaction term between gender and treatment in the fixed effect part. 
+
+```{r}
+lmm_rs <- lmer(nail_length ~ month + treatment * gender + health + (month | subject), data = toenail)
+```
+
+```{r}
+summary(lmm_rs)
+```
+
+```{r, warning=FALSE}
+confint(lmm_rs)
+```
+
+Since the 95% confidence interval of interaction term between treatment and genderr include 0, we do not have enough evidence to conclude that there is an association between the pattern of change of nail lengths and gender in subjects taking terbinafine. 
+
+
+## Q3 (25 pts). GEE and GLMM
+
+
+The Skin Cancer Prevention Study, a randomized, double-blind, placebo-controlled clinical trial, was designed to test the effectiveness of beta-carotene in the prevention of non-melanoma skin cancer in high-risk subjects. A total of 1,683 subjects were randomized to either placebo or 50mg of beta-carotene per day and were followed for up to 5 years. Subjects were examined once per year and biopsied if a cancer was suspected to determine the number of new cancers per year. The outcome variable, $Y$, is a count of the number of new skin cancers per year. You may assume that the counts of new skin cancers, $Y$, are from exact one-year periods (so that no offset term is needed).
+
+Selected data from the study are in the dataset called `skin.txt` and is available [here](https://github.com/ucla-biostat-200c/2024spring/tree/master/hw/datasets). Each row of the dataset contains the following 9 variables: ID, Center, Age, Skin, Gender, Exposure, $Y$, Treatment, Year. These variables take values as follows:
+
+| Variable |  |
+| ----------------- | ------------------------- |
+|**ID**:            | Subject identifier number |
+|**Center**:        | Identifier number for center of enrollment|
+|**Age:**         | Subject’s age in years at randomization|
+|**Skin:**        |Skin type (1=burns; 0 otherwise) [evaluated at randomization and doesn’t change with time]|
+|**Gender:**      |1=male; 0=female| 
+|**Exposure:**    |Count of number of previous skin cancers [prior to randomization]|
+|**$Y$:**           |Count of number of new skin cancers in the Year of follow-up|
+|**Treatment:**   |1=beta-carotene; 0=placebo|
+|**Year:**        |Year of follow-up after starting randomized treatment|
+
+
+Your collaborator is interested in assessing the effect of treatment on the incidence of new 
+skin cancers over time. As the statistician on the project, provide an analysis of the data
+that addresses this question. Specifically, the investigator at Center=1 is interested in characterizing the distribution of risk among subjects at her center. In the following, only include the subset of subjects with Center=1 in the analysis.
+
+### 3.1
+
+1. Provide an algebraic definition for a generalized linear marginal model (GEE) in which the only effects are for the intercept and Year (as a continuous variable). Fit this model and provide a table which includes the estimates of the parameters in your model.
+     
+$g(\mu_{ij}) = \log [E(Y_{ij}|Year_{ij})] = \beta_0 + \beta_1 Year_{ij}$
+
+where $Y_{ij}$ is the outcome(skin cancer count) for individual at the jth year of follow up after starting randomized treatment. $Year_{ij}$ is within $1,...,5$
+
+$Var(Y_{ij}) = \phi \mu_{ij}(1-\mu_{ij})$
+
+where $\phi$ is the dispersion parameter.
+
+
+
+
+```{r, warning=FALSE}
+skin <- read_table("skin.txt",
+                   col_names = c("ID", "Center", "Age", "Skin", "Gender", "Exposure", "Y", "Treatment", "Year"))
+
+skin <- skin %>%
+  mutate(
+    ID = factor(ID),
+    Center = factor(Center),
+    Skin = factor(Skin),
+    Gender = factor(Gender),
+    Treatment = factor(Treatment)) %>%
+    filter(Center == "1")
+
+head(skin)
+```
+```{r}
+gee_model <- geeglm(Y ~ Year, id = ID, data = skin, family = poisson, corstr = "unstructured")
+
+summary(gee_model)
+```
+
+### 3.2
+
+2. Provide an algebraic definition for a generalized linear mixed model (GLMM) in which the only fixed effects are for the intercept and Year (as a continuous variable), and the only random effect is the intercept. What is being assumed about how the distribution of risk among subjects changes with time?
+     
+$g(E[y_{ij}|b_i])=\log[E(Y_{ij}|b_i)]=\tilde{\beta_0} + \tilde{\beta_1} Year_{ij} + b_i$
+     
+where $Y_{ij}$ is the outcome(skin cancer count) for individual i at the jth year of follow up after starting randomized treatment. $Year_{ij}$ is within $1,...,5$ and $b_i$ is the random effect for the ith subject. 
+
+The model assumes that the risk (or response variable) among subjects changes over time according to the fixed effect of Year, but each subject has a unique baseline risk due to the random intercept. In specific:
+
+$Var(Y_{ij}|b_i) = E(Y_{ij}|b_i)$, $b_i \sim N(0, \sigma_b^2)$, Subjects are mutually independent.
+
+### 3.3
+
+3. Fit your chosen GLMM and provide a table from your output which includes the estimates for the parameters in your GLMM, and provide careful interpretation of the Year term.
+
+```{r}
+
+modlap <- 
+  glmer(Y ~ Year + (1 | ID),
+        family = poisson,
+        data   = skin)
+summary(modlap)
+```
+    
+For interpretation, for each one unit increate in year, the log of expected count of new skin cancer decreases by 0.1083 for a typical subject.    
+
+### 3.4
+
+4. Are the estimates for the fixed intercept terms the same or different in the GLMM compared with the marginal model fitted in question (1)? Why are they the same or different?
+
+No, they are different. The fixed intercept term in the GLMM is the log of the expected count of new skin cancer for a typical subject at year 0. The fixed intercept term in the GEE is the log of the expected count of new skin cancer for a typical subject at year 0. The difference is due to the random effect in the GLMM which accounts for the variability in the baseline risk among subjects.
+
+### 3.5
+
+5. Use the parameter estimates from your GLMM and your model definition to characterize the distribution of expected counts of new skin cancers among subjects at center 1 during their first year of follow-up.
+
+The model can be characterized as :
+
+$\log(E(Y_{ij}|X_{ij},b_i))=\beta_0+\beta_1Year_{ij}+b_i$
+
+When $Year_{ij}=1$,
+
+$\log(E(Y_{ij}|X_{ij},b_i))=-2.2988-0.1083+b_i=-2.4071+b_i$
+
+Since $b_i \sim N(0, 1.57)$, we can characterize the distribution of expected counts of new skin cancers among subjects at center 1 during their first year of follow-up.
+
+## Q4. (25 pts) LMM and GAMM
+
+This question is adapted from Exercise 11.2 of ELMR (p251). Read the documentation of the dataset `hprice` in Faraway package before working on this problem.
+
+```{r}
+data(hprice)
+```
+
+
+### 4.1
+
+1. Make a plot of the data on a single panel to show how housing prices increase by year. Describe what can be seen in the plot.
+
+```{r}
+hprice %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = time, y = narsp, group = msa)) + 
+  labs(title = "Housing price over time", x = "year", 
+       y = "log average sale price in thousands of dollars")
+
+
+```
+We can see that the housing price steadly increases over time. In a few cities, the housing prices increase very fast at the beginning and hold on that price for the rest of the time.
+
+### 4.2
+
+2. Fit a linear model with the (log) house price as the response and all other variables (except msa) as fixed effect predictors. Which terms are statistically significant? Discuss the coefficient for time.
+
+```{r}
+mod <- lm(narsp ~ . - msa, data = hprice)
+
+summary(mod)
+```
+
+`ypc`, `perypc`, `regtest`, `rcdum1`, `time` are all statistically significant with p-value < 0.05. The coefficient for `time` is -0.0177, which means that the for every unit increase in year, the expected natural log of the average sale price decreases by 0.0177 thousands of dollars, controlling other predictors.
+
+### 4.3
+
+3. Make a plot that shows how per-capita income changes over time. What is the nature of the increase? Make a similar plot to show how income growth changes over time. Comment on the plot.
+
+```{r}
+hprice %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = time, y = ypc, group = msa)) + 
+  labs(title = "Per-capita income over time", x = "year", 
+       y = "log per-capita income in thousands of dollars")
+```
+The increase seems to be linearly associated with time.
+
+
+```{r}
+hprice %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = time, y = perypc, group = msa)) + 
+  labs(title = "Income growth over time", x = "year", 
+       y = "log income growth in thousands of dollars")
+
+```
+The percentage growth of income seems to be flucturated over time. There is trend of growing at the start and it then decreases. At nearly the end of time, the growth rebounds and all growth in different areas converges to a same percentage around 4%. 
+
+### 4.4
+
+4. Create a new variable that is the per-capita income for the first time period for each MSA. Refit the same linear model but now using the initial income and not the income as it changes over time. Compare the two models.
+
+```{r}
+hprice <- hprice %>%
+  group_by(msa) %>%
+  mutate(initial_ypc = first(ypc)) %>%
+  ungroup()
+```
+
+
+```{r}
+mod2 <- lm(narsp ~ . - msa - ypc, data = hprice)
+summary(mod2)
+```
+The adjusted R-square of the model using initial income is 0.766, while the model using income as it changes over time is 0.753。 Hence, we would argue that the model using initial income explains a bit more of the variablility of the response variable. Regarding the significance of other predictors,  `perypc` is no longer a significant predictor and `ajwtr1` becomes a significant predictor in the model using initial income. We also observe the sign of coefficient of time changes from negative to positive.
+
+### 4.5
+
+5. Fit a mixed effects model that has a random intercept for each MSA. Why might this be reasonable? The rest of the model should have the same structure as in the previous question. Make a numerical interpretation of the coefficient of time in your model. Explain the difference between REML and MLE methods.
+
+
+
+```{r}
+hprice_scaled <- hprice |>
+  mutate(initial_ypc = scale(initial_ypc))
+```
+
+
+
+```{r, warning=FALSE}
+modlap <- lmer(narsp ~ . - msa - ypc + (1|msa), data = hprice_scaled)
+summary(modlap)
+```
+
+This is reasonable because we previously assumed independence for observations within the same MSA, which is not true. This affects the interpretation and inference of the coefficients. The coefficient of time in the model is 0.03680. It means for every unit increase in year, the expected natural log of the average sale price increase by 0.03680 thousands of dollars for a typical area, controlling other predictors. 
+
+MLE estimates all parameters (both fixed effects and variance components) by maximizing the likelihood of the observed data. REML focuses on estimating the variance components more accurately by maximizing a restricted likelihood function, which is obtained by removing the fixed effects from the likelihood.
+
+### 4.6
+
+6. Fit a model that omits the adjacent to water and rent control predictors. Test whether this reduction in the model can be supported.
+
+```{r}
+mod3 <- lmer(narsp ~ . - msa - ypc - ajwtr - rcdum + (1|msa), data = hprice_scaled)
+summary(mod3)
+```
+
+
+```{r, warning=FALSE}
+KRmodcomp(modlap, mod3)
+```
+Since the p value is greater then 0.05, we fail to reject the null hypothesis which means that the model with reduced parameters is not significantly different from the full model. It supports the reduction.
+
+### 4.7
+
+7. It is possible that the increase in prices may not be linear in year. Fit an additive mixed model where smooth is added to year. Make a plot to show how prices have increased over time.
+
+```{r}
+gam_model <- gam(narsp ~ s(time, k = 3) + perypc + regtest + rcdum + ajwtr + initial_ypc,
+                 data = hprice_scaled,
+                 random = list(msa = ~ 1))
+```
+
+```{r}
+plot(gam_model, select = 1)
+```
+
+As time increases, the log of house prices increases. 
+
+### 4.8
+
+8. Interpret the coefficients in the previous model for the initial annual income, growth and regulation predictors.
+
+```{r}
+summary(gam_model)
+```
+
+initial_ypc: The coefficient for initial_ypc is 0.17734 with a highly significant p-value (< 2e-16). This suggests that for each unit increase in initial_ypc, the expected natural log of the average sale price increase by approximately 0.17734 units, holding all other variables constant.
+
+perypc: The coefficient for perypc is -0.00852 with a p-value of 0.088, indicating a marginally non-significant effect. This means that for each unit increase in perypc, the expected natural log of the average sale price decrease by approximately 0.00852 units, holding all other variables constant.
+
+regtest: The coefficient for regtest is 0.03015 with a highly significant p-value (< 2e-16). This suggests that for each unit increase in regtest, the expected natural log of the average sale price increase by approximately 0.03015 units, holding all other variables constant.
+
+rcdum1: The coefficient for rcdum1 is 0.15127 with a highly significant p-value (2.5e-06). This indicates that when rcdum is 1, the expected natural log of the average sale price increase by approximately 0.15127 units compared to when rcdum is 0, holding all other variables constant.
+
+ajwtr1: The coefficient for ajwtr1 is 0.03854 with a p-value of 0.050, indicating a marginally significant effect. This suggests that when ajwtr is 1, the expected natural log of the average sale price increase by approximately 0.03854 units compared to when ajwtr is 0, holding all other variables constant.
+
+
+## Optional Extra Credit Problem* 
+
+[Midterm makeup question](https://ucla-biostat-200c.github.io/2024spring/hw/midterm-makeup.html)
+
+>> This problem is meant to offer another chance to demonstrate understanding of some of the material on the mid-term. If you choose to do this problem and your score is higher than your mid-term grade, then your mid-term grade will be reweighted to be `New Midterm Grade = .8*Old Midterm Grade + .2*Extra Credit Problem`
+

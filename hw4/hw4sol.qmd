@@ -67,7 +67,7 @@ The 2 most significant predictors are `incomegp` and `bankacc`.
 
 -   `bankacc`: The odds of moving from credit card usage level 1 to
     credit card usage level 2 or from credit card usage level 2 to
-    credit card usage level 3 increases by a factor of 1.605149 as
+    credit card usage level 3 increases by a factor of 8.188 as
     having bank account compared to not having bank account.
 
 The 2 least significant predictors are `house` and `children`.

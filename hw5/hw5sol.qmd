@@ -1,0 +1,583 @@
+---
+title: "Biostat 200C Homework 5"
+subtitle: Due June 3  @ 11:59PM
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
+
+```{r}
+library(faraway)
+library(tidyr)
+library(ggplot2)
+library(lme4)
+library(dplyr)
+library(reshape2)
+library(MASS)
+library(geepack)
+library(faraway)
+```
+
+
+## Q1. Balanced one-way ANOVA random effects model
+
+Consider the balanced one-way ANOVA random effects model with $a$ levels
+and $n$ observations in each level $$
+y_{ij} = \mu + \alpha_i + \epsilon_{ij}, \quad i=1,\ldots,a, \quad j=1,\ldots,n.
+$$ where $\alpha_i$ are iid from $N(0,\sigma_\alpha^2)$, $\epsilon_{ij}$
+are iid from $N(0, \sigma_\epsilon^2)$.
+
+1.  Derive the ANOVA estimate for $\mu$, $\sigma_\alpha^2$, and
+    $\sigma_{\epsilon}^2$. Specifically show that \begin{eqnarray*}
+      \mathbb{E}(\bar y_{\cdot \cdot}) &=& \mathbb{E} \left( \frac{\sum_{ij} y_{ij}}{na} \right) = \mu \\
+      \mathbb{E} (\text{SSE}) &=& \mathbb{E} \left[ \sum_{i=1}^a \sum_{j=1}^n (y_{ij} - \bar{y}_{i \cdot})^2 \right] = a(n-1) \sigma_{\epsilon}^2 \\
+      \mathbb{E} (\text{SSA}) &=& \mathbb{E} \left[ \sum_{i=1}^a \sum_{j=1}^n (\bar{y}_{i \cdot} - \bar{y}_{\cdot \cdot})^2 \right] = (a-1)(n \sigma_{\alpha}^2 + \sigma_{\epsilon}^2),
+    \end{eqnarray*} which can be solved to obtain ANOVA estimate
+    \begin{eqnarray*}
+    \widehat{\mu} &=& \frac{\sum_{ij} y_{ij}}{na}, \\
+    \widehat{\sigma}_{\epsilon}^2 &=& \frac{\text{SSE}}{a(n-1)}, \\
+    \widehat{\sigma}_{\alpha}^2 &=& \frac{\text{SSA}/(a-1) - \widehat{\sigma}_{\epsilon}^2}{n}.
+    \end{eqnarray*}
+
+**Answer:**
+
+$E(\bar{y}..) = E(\frac{\sum_{ij} y_{ij}}{na}) = \frac{\sum_{ij} E(y_{ij})}{na} = \frac{\sum_{ij} \mu}{na}=\frac{na\mu}{na}=\mu$
+
+$\vec{Y} = \mu \vec{\mathbb{1}}_{na} + Z\vec{\alpha} +\vec{\epsilon}$ where $Z=I_a \otimes \mathbb{1}_{n\times n}$ and $\epsilon \sim N(0, \sigma_\epsilon^2 I_{na})$
+
+$Cov(\vec{Y})=ZZ'\sigma_a^2+\sigma_{\epsilon}^2I_{na}$
+
+define
+
+\begin{align}
+  y &= \begin{bmatrix}
+         y_{i1} \\
+         y_{i2} \\
+         \vdots \\
+         y_{in}
+       \end{bmatrix}
+\end{align}
+
+$\bar{y}_{i.} = \frac{1}{n} \sum_{j=1}^{n} y_{ij}=\frac{1}{n}\mathbb{1_n'}y_i$
+
+$y_i-\bar{y}_{i.} = y_i - \frac{1}{n}\mathbb{1_n'}y_i = (I_n-\frac{1}{n}\mathbb{1_n}\mathbb{1_n'})y_i$
+
+Then we can rewrite it as:
+
+$SSE=\vec{y}'A_1\vec{y}$
+
+\begin{align}
+  A_1 &= \begin{bmatrix}
+            I_n-n^{-1}\mathbb{1_n}\mathbb{1_n'} & & \\
+            & \ddots & \\
+            & & I_n-n^{-1}\mathbb{1_n}\mathbb{1_n'} 
+         \end{bmatrix} 
+\end{align}
+
+\begin{align}
+E(SSE)&=E(\vec{y}'A_1\vec{y})\\
+&=E(trA_1\vec{y}\vec{y}')\\
+&=trA_1Cov(\vec{y})\\
+&=trA_1(ZZ'\sigma_a^2+\sigma_{\epsilon}^2I_{na})+\mu^2trA_1\mathbb{1_na}\mathbb{1'_na}\\
+&=0+a(n-1)\sigma^2_\epsilon+0\\
+&=a(n-1)\sigma^2_\epsilon
+\end{align}
+
+
+$SSA=\vec{y}'A_0\vec{y}$
+
+where $A_0=I_{na}-\frac{1}{an}\mathbb{1_{na}}\mathbb{1_{na}'}$
+
+\begin{align}
+E(SST)&=trA_0(\sigma_a^2ZZ'+\sigma_{\epsilon}^2I_{na})+\mu^2trA_0\mathbb{1_na}\mathbb{1'_na}\\
+&=n(a-1)\sigma_a^2+\sigma_{\epsilon}^2(na-1)+0\\
+&=n(a-1)\sigma_a^2+\sigma_{\epsilon}^2(na-1)
+\end{align}
+
+$$
+\mathbb{E}(\text{SSA}) = \mathbb{E}(\text{SST}) - \mathbb{E}(\text{SSE}) = (a - 1)(n \sigma_{\alpha}^2 + \sigma_{\epsilon}^2).
+$$
+
+2.  Derive the MLE estimate for $\mu$, $\sigma_\alpha^2$, and
+    $\sigma_{\epsilon}^2$. Hint: write down the log-likelihood and find
+    the maximizer.
+
+The log-likelihodd is \begin{eqnarray*}
+    \ell(\mu, \sigma_{\alpha}^2, \sigma_{\epsilon}^2) &=& - \frac n2 \log(2\pi) - \frac 12 \log \det (\sigma_{\alpha}^2 \mathbf{Z} \mathbf{Z}^T + \sigma_{\epsilon}^2 \mathbf{I}) - \frac 12 (\mathbf{y} - \mathbf{1}_{na} \mu)^T (\sigma_{\alpha}^2 \mathbf{Z} \mathbf{Z}^T + \sigma_{\epsilon}^2 \mathbf{I})^{-1} (\mathbf{y} - \mathbf{1}_{na} \mu) \\
+    &=& \sum_i - \frac 12 \log \det (\sigma_{\alpha}^2 \mathbf{1}_n \mathbf{1}_n^T + \sigma_{\epsilon}^2 \mathbf{I}_n) - \frac 12 (\mathbf{y}_i - \mathbf{1}_{n} \mu)^T (\sigma_{\alpha}^2 \mathbf{1}_n \mathbf{1}_n^T + \sigma_{\epsilon}^2 \mathbf{I}_n)^{-1} (\mathbf{y}_i - \mathbf{1}_{n} \mu).
+    \end{eqnarray*} By Woodbury formula \begin{eqnarray*}
+    (\sigma_{\alpha}^2 \mathbf{1}_n \mathbf{1}_n^T + \sigma_{\epsilon}^2 \mathbf{I}_n)^{-1} &=& \sigma_{\epsilon}^{-2} \mathbf{I}_{n} - \frac{\sigma_{\epsilon}^{-2} \sigma_{\alpha}^2}{\sigma_{\epsilon}^2 + n\sigma_{\alpha}^2} \mathbf{1}_n \mathbf{1}_n^T \\
+    \det (\sigma_{\alpha}^2 \mathbf{1}_n \mathbf{1}_n^T + \sigma_{\epsilon}^2 \mathbf{I}_n) &=& \sigma_{\epsilon}^{2n} (1 + n \sigma_{\alpha}^2 / \sigma_{\epsilon}^2).
+    \end{eqnarray*} Let $\lambda = \sigma_\alpha^2 / \sigma_\epsilon^2$,
+    then the log-likelihood is \begin{eqnarray*}
+    \ell(\mu, \sigma_{\alpha}^2, \sigma_{\epsilon}^2) &=& - \frac{na}{2} \log \sigma_{\epsilon}^2 - \frac{a}{2} \log (1 + n\lambda) - \frac{\sigma_{\epsilon}^{-2}}{2} \text{SST}(\mu) + \frac{\sigma_{\epsilon}^{-2}}{2} \frac{n\lambda}{1 + n \lambda} \text{SSA}(\mu) \\
+    &=& - \frac{na}{2} \log \sigma_{\epsilon}^2 - \frac{a}{2} \log (1 + n\lambda) - \frac{\sigma_{\epsilon}^{-2}}{2} \frac{\text{SST}(\mu) + n\lambda \text{SSA}}{1 + n \lambda}.
+    \end{eqnarray*} Setting derivative with respect to $\mu$ to 0 yields
+    $$
+    \hat \mu = \bar y_{\cdot \cdot}.
+    $$ Setting derivative with respect to $\sigma_{\epsilon}^2$ to 0
+    yields equation $$
+    \sigma_{\epsilon}^2 = \frac{\text{SST} - \frac{n\lambda}{1 + n\lambda} \text{SSA}}{na} = \frac{\text{SST} + n \lambda \text{SSE}}{na(1 + n\lambda)}.
+    $$ Substitution of the above expression into the log-likelihood
+    shows we need to maximize \begin{eqnarray*}
+    & & - \frac{na}{2} \log \left( \text{SST} - \frac{n\lambda}{1 + n\lambda} \text{SSA} \right) - \frac{a}{2} \log (1 + n\lambda) \\
+    &=& - \frac{na}{2} \log \left( \text{SST} + n \lambda \text{SSE} \right) + \frac{(n-1)a}{2} \log (1 + n \lambda).
+    \end{eqnarray*} Setting derivative to 0 gives the maximizer $$
+    \hat \lambda = \frac{n-1}{n} \frac{\text{SST}}{\text{SSE}} - 1.
+    $$ Thus $$
+    \hat \sigma_{\epsilon}^2 = \frac{\text{SST} - \frac{n \hat \lambda}{1 + n \hat \lambda} \text{SSA}}{na} = \frac{\text{SSE}}{(n-1)a}
+    $$ (same as ANOVA estimate) and $$
+    \hat \sigma_{\alpha}^2 = \frac{\text{SSA}}{an} - \frac{\text{SSE}}{an(n-1)}.
+    $$
+    
+$$ L(\mu, \sigma_\alpha^2, \sigma_\epsilon^2) = \prod_{i=1}^{a} \prod_{j=1}^{n} \frac{1}{\sqrt{2 \pi (\sigma_\alpha^2 + \sigma_\epsilon^2)}} \exp \left( -\frac{(y_{ij} - \mu)^2}{2(\sigma_\alpha^2 + \sigma_\epsilon^2)} \right) $$
+
+$$ \ell(\mu, \sigma_\alpha^2, \sigma_\epsilon^2) = -\frac{an}{2} \log(2\pi) - \frac{an}{2} \log(\sigma_\alpha^2 + \sigma_\epsilon^2) - \frac{1}{2(\sigma_\alpha^2 + \sigma_\epsilon^2)} \sum_{i=1}^{a} \sum_{j=1}^{n} (y_{ij} - \mu)^2 $$
+
+$$ \frac{\partial \ell}{\partial \mu} = \frac{1}{\sigma_\alpha^2 + \sigma_\epsilon^2} \sum_{i=1}^{a} \sum_{j=1}^{n} (y_{ij} - \mu) $$
+
+Setting this to zero:
+
+$$ \sum_{i=1}^{a} \sum_{j=1}^{n} (y_{ij} - \mu) = 0 $$
+
+$$ \sum_{i=1}^{a} \sum_{j=1}^{n} y_{ij} = \sum_{i=1}^{a} \sum_{j=1}^{n} \mu $$
+
+$$ \mu = \frac{1}{an} \sum_{i=1}^{a} \sum_{j=1}^{n} y_{ij} $$
+
+So the MLE for $\mu$ is:
+
+$$ \hat{\mu} = \frac{1}{an} \sum_{i=1}^{a} \sum_{j=1}^{n} y_{ij} $$
+
+Similarly, we can derive the MLE for $\sigma_\alpha^2$ and
+$\sigma_\epsilon^2$ with the same procedures:
+
+$$ \hat{\sigma}_\epsilon^2 = \frac{\text{SSE}}{a(n-1)} $$
+
+$$ \hat{\sigma}_\alpha^2 = \frac{\text{SSA} / (a-1) - \hat{\sigma}_\epsilon^2}{n} $$
+
+Where:
+
+$$ \text{SSE} = \sum_{i=1}^{a} \sum_{j=1}^{n} (y_{ij} - \bar{y}_{i.})^2 $$
+
+$$ \text{SSA} = \sum_{i=1}^{a} n (\bar{y}_{i.} - \bar{y}_{..})^2 $$
+
+3.  (**Optional**) Derive the REML estimate for $\mu$,
+    $\sigma_\alpha^2$, and $\sigma_{\epsilon}^2$.
+
+
+4.  For all three estimates, check that your results match those we
+    obtained using R for the `pulp` example in class.
+
+**Answer:**
+
+```{r}
+data(pulp)
+```
+
+```{r}
+mean(pulp$bright)
+```
+
+```{r}
+(aovmod <- aov(bright ~ operator, data = pulp) %>%
+  summary())
+```
+```{r}
+(aovmod[1][[1]][[3]][1] - aovmod[1][[1]][[3]][2]) / 5
+```
+
+```{r}
+aovmod[1][[1]][[3]][2]
+```
+
+```{r}
+overall_mean <- mean(pulp$bright)
+factor_means <- pulp %>%
+  group_by(operator) %>%
+  summarise(mean_bright = mean(bright))
+
+SSE <- pulp %>%
+  group_by(operator) %>%
+  summarise(sum_sq = sum((bright - mean(bright))^2)) %>%
+  summarise(SSE = sum(sum_sq)) %>%
+  pull(SSE)
+
+SSA <- factor_means %>%
+  summarise(SSA = sum(n() * (mean_bright - overall_mean)^2)) %>%
+  pull(SSA)
+
+a <- nlevels(pulp$operator)
+n <- nrow(pulp) / a
+sigma2_epsilon <- SSE / (a * (n - 1))
+
+sigma2_alpha <- (SSA / (a - 1) - sigma2_epsilon) / n
+
+# Print results
+cat("SSE:", SSE, "\n")
+cat("SSA:", SSA, "\n")
+cat("sigma^2_epsilon:", sigma2_epsilon, "\n")
+cat("sigma^2_alpha:", sigma2_alpha, "\n")
+```
+$\sigma^2_{\epsilon}$ does not match.
+
+## Q2. Estimation of random effects
+
+1.  Assume the conditional distribution $$
+    \mathbf{y} \mid \boldsymbol{\gamma} \sim N(\mathbf{X} \boldsymbol{\beta} + \mathbf{Z} \boldsymbol{\gamma}, \sigma^2 \mathbf{I}_n)
+    $$ and the prior distribution $$
+    \boldsymbol{\gamma} \sim N(\mathbf{0}_q, \boldsymbol{\Sigma}).
+    $$ Then by the Bayes theorem, the posterior distribution is
+    \begin{eqnarray*}
+    f(\boldsymbol{\gamma} \mid \mathbf{y}) &=& \frac{f(\mathbf{y} \mid \boldsymbol{\gamma}) \times f(\boldsymbol{\gamma})}{f(\mathbf{y})}, \end{eqnarray*}
+    where $f$ denotes corresponding density. Show that the posterior
+    distribution is a multivariate normal with mean $$
+    \mathbb{E} (\boldsymbol{\gamma} \mid \mathbf{y}) = \boldsymbol{\Sigma} \mathbf{Z}^T (\mathbf{Z} \boldsymbol{\Sigma} \mathbf{Z}^T + \sigma^2 \mathbf{I})^{-1} (\mathbf{y} - \mathbf{X} \boldsymbol{\beta}).
+    $$
+
+**Answer:**
+
+Assume the conditional distribution
+
+$$ y \mid \gamma \sim N(X\beta + Z\gamma, \sigma^2 I_n) $$
+
+and the prior distribution
+
+$$ \gamma \sim N(0, \Sigma). $$
+
+Then by Bayes' theorem, the posterior distribution is
+
+$$ f(\gamma \mid y) = \frac{f(y \mid \gamma) \times f(\gamma)}{f(y)}, $$
+
+where f denotes the corresponding density.
+
+The likelihood function is
+
+$$ f(y \mid \gamma) = \frac{1}{(2\pi \sigma^2)^{n/2}} \exp\left( -\frac{1}{2\sigma^2} (y - X\beta - Z\gamma)^\top (y - X\beta - Z\gamma) \right). $$
+
+The prior density is
+
+$$ f(\gamma) = \frac{1}{(2\pi)^{q/2} \lvert \Sigma \rvert^{1/2}} \exp\left( -\frac{1}{2} \gamma^\top \Sigma^{-1} \gamma \right). $$
+
+Therefore, the posterior distribution is proportional to the product of
+these densities:
+
+$$ f(\gamma \mid y) \propto \exp\left( -\frac{1}{2\sigma^2} (y - X\beta - Z\gamma)^\top (y - X\beta - Z\gamma) \right) \times \exp\left( -\frac{1}{2} \gamma^\top \Sigma^{-1} \gamma \right). $$
+
+Combining the exponents, we get
+
+$$ f(\gamma \mid y) \propto \exp\left( -\frac{1}{2} \left[ \frac{1}{\sigma^2} (y - X\beta - Z\gamma)^\top (y - X\beta - Z\gamma) + \gamma^\top \Sigma^{-1} \gamma \right] \right). $$
+
+Expanding the term inside the exponent:
+
+$$ \frac{1}{\sigma^2} (y - X\beta - Z\gamma)^\top (y - X\beta - Z\gamma) = \frac{1}{\sigma^2} \left[ (y - X\beta)^\top (y - X\beta) - 2 (y - X\beta)^\top Z\gamma + \gamma^\top Z^\top Z\gamma \right], $$
+
+so the posterior can be rewritten as:
+
+$$ f(\gamma \mid y) \propto \exp\left( -\frac{1}{2} \left[ \frac{1}{\sigma^2} (y - X\beta)^\top (y - X\beta) - \frac{2}{\sigma^2} (y - X\beta)^\top Z\gamma + \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right) \gamma^\top \gamma \right] \right). $$
+
+To simplify, complete the square for $\gamma$:
+
+$$ \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right) \gamma^\top \gamma - \frac{2}{\sigma^2} (y - X\beta)^\top Z \gamma = \left( \gamma - \hat{\gamma} \right)^\top \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right) \left( \gamma - \hat{\gamma} \right) + \text{constant}, $$
+
+where
+
+$$ \hat{\gamma} = \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right)^{-1} \frac{1}{\sigma^2} Z^\top (y - X\beta). $$
+
+Thus, the posterior distribution is
+
+$$ \gamma \mid y \sim N\left( \hat{\gamma}, \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right)^{-1} \right). $$
+
+The mean of the posterior distribution is
+
+$$ E(\gamma \mid y) = \hat{\gamma} = \Sigma Z^\top \left( Z \Sigma Z^\top + \sigma^2 I \right)^{-1} (y - X\beta). $$
+
+2.  For the balanced one-way ANOVA random effects model, show that the
+    posterior mean of random effects is always a constant (less than 1)
+    multiplying the corresponding fixed effects estimate.
+
+**Answer:**
+
+From the previous derivation, we know the posterior distribution of
+$\alpha_i$ given the data (y) is:
+
+$$ \alpha_i \mid y \sim N \left( \hat{\alpha}_i, \left( \frac{1}{\sigma^2} Z^\top Z + \Sigma^{-1} \right)^{-1} \right), $$
+
+where $\hat{\alpha}_i$ is the posterior mean.
+
+For the balanced one-way ANOVA random effects model, the posterior mean
+of $\alpha_i$ is:
+
+$$ E(\alpha_i \mid y) = \frac{\sigma_\alpha^2}{\sigma_\alpha^2 + \frac{\sigma_\epsilon^2}{n}} \left( \bar{y}_{i.} - \bar{y}_{..} \right), $$
+
+where $\bar{y}_{i.}$ is the mean of the observations in the (i)-th
+group, and $\bar{y}_{..}$ is the overall mean of all observations.
+
+The fixed effects estimate for $\alpha_i$ is simply
+$\bar{y}_{i.} - \bar{y}_{..}$. Thus, the posterior mean of the random
+effects is:
+
+$$ E(\alpha_i \mid y) = \frac{\sigma_\alpha^2}{\sigma_\alpha^2 + \frac{\sigma_\epsilon^2}{n}} (\bar{y}_{i.} - \bar{y}_{..}). $$
+
+Let
+$\lambda = \frac{\sigma_\alpha^2}{\sigma_\alpha^2 + \frac{\sigma_\epsilon^2}{n}}$
+
+Clearly, $\lambda$ is a constant that is less than 1 because
+$\sigma_\alpha^2 > 0$ and $\sigma_\epsilon^2 > 0$
+
+Therefore,
+
+$$ E(\alpha_i \mid y) = \lambda (\bar{y}_{i.} - \bar{y}_{..}), $$
+
+where $\lambda$ is the shrinkage factor which is always less than 1.
+
+## Q3. ELMR Exercise 11.1 (p251)
+
+![](images/WeChat0f150307da69a4fcfa94f08884ec157d.png)
+
+**(a) Answer:**
+
+```{r}
+data(ratdrink)
+help(ratdrink)
+```
+
+
+```{r}
+ratdrink |>
+  ggplot() + 
+  geom_line(mapping = aes(x = weeks, y = wt, group = subject, color = treat))
+```
+
+```{r}
+ratdrink |>
+  ggplot() + 
+  geom_line(mapping = aes(x = weeks, y = wt, group = subject)) + 
+  facet_wrap(~ treat)
+```
+
+We can see the weight increases with time for all three groups. The
+treatment group with added thiouracil seems to increase slower tha the
+control group and the other treatment group.
+
+**(b) Answer:**
+
+```{r}
+mmod <- lmer(wt ~ weeks * treat + (weeks | subject), data = ratdrink)
+summary(mmod)
+```
+
+-   For control group at weeks 0, the expected weight is 52.88 for a typical individual.
+
+-   For every one week increase, the rate of change for expected weight
+    decreases -9.3700 compared to control group for typical individuals.
+
+-   The SD of intercept of random effect is 5.7 which might suggests there is slightly large differences between different subjects.
+
+**(c) Answer:**
+
+
+Since the 95% confidence interval of all treatments contains 0, we do not
+have enough evidence to conclude there is significant difference of effect between
+treatments and control group.
+
+**(d) Answer:**
+
+```{r}
+plot(resid(mmod) ~ fitted(mmod), xlab = "Fitted", ylab = "Residuals")
+abline(h = 0 )
+```
+
+```{r}
+qqnorm(resid(mmod), main = "")
+```
+
+The residuals are equally scattered about the x-axis with no evidence of
+homoscedasticity. Assumptions of linearity and equal variance appear
+reasoanbly satisfied. QQ plot shows the residuals roughly follow a
+normal distribution.
+
+**(e) Answer:**
+
+```{r}
+confint(mmod)
+```
+
+## Q4. ELMR Exercise 13.1 (p295)
+
+![](images/WeChat2a27766b2b4c4c30b8fffd8a6fd4593b.png)
+
+![](images/WeChat4688fa8a540fa890e33126640bb687c1.png)
+
+**(a) Answer:**
+
+```{r}
+data(ohio)
+help(ohio)
+```
+
+
+```{r}
+ohio |>
+  ggplot() +
+  geom_line(mapping = aes(x = age, y = smoke, group = id))
+
+```
+
+No, no mother changed their smoke status during the study.
+
+**(b) Answer:**
+
+```{r}
+wheeze_count <- ohio %>%
+  group_by(id, smoke) %>%
+  summarize(t = sum(resp), .groups = 'drop')
+
+wheeze_table <- table(wheeze_count$smoke, wheeze_count$t)
+
+wheeze_table <- as.data.frame.matrix(wheeze_table)
+
+
+wheeze_table$total <- rowSums(wheeze_table)
+wheeze_table <- wheeze_table %>%
+  mutate(across(everything(), ~ ./total)) %>%
+  dplyr::select(-total)
+
+
+print(wheeze_table)
+```
+
+
+**(c) Answer:**
+
+```{r}
+proportion_table <- ohio |>
+  group_by(age, smoke) |>
+  summarise(proportion_resp0 = mean(resp == 0)) |>
+  ungroup()
+
+proportion_table_wide <- dcast(proportion_table, age ~ smoke, value.var = "proportion_resp0")
+
+```
+
+```{r}
+proportion_table$smoke <- as.factor(proportion_table$smoke)
+```
+
+```{r}
+ggplot(proportion_table, aes(x = age, y = proportion_resp0, color = smoke, group = smoke)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Proportion of resp == 0 by Age and Smoke Status",
+       x = "Age",
+       y = "Proportion of resp == 0",
+       color = "Smoke Status") +
+  theme_minimal()
+
+```
+
+**(d) Answer:**
+
+```{r}
+#remove age
+binomial_df <- ohio |>
+  group_by(id) |>
+  summarise(total_resp = sum(resp), 
+            smoke = first(smoke)) |>
+  mutate(smoke = as.factor(smoke))
+```
+
+```{r}
+
+glmmod <- glm(cbind(total_resp, 4 - total_resp) ~ smoke, data = binomial_df, family = binomial)
+
+summary(glmmod)
+```
+
+No, we cannot prove it. Since we are assuming within each group(`id`),
+the observations are independent, which is not true in this case. The
+assumption is violated hence the inference is not valid.
+
+**(e) Answer:**
+
+```{r}
+ohio$id <- as.factor(ohio$id)
+ohio$smoke <- as.factor(ohio$smoke)
+```
+
+
+
+```{r}
+modpql <- glmmPQL(resp ~ age + smoke,
+                  random = ~ 1 | id,
+                  family = binomial,
+                  data   = ohio)
+summary(modpql)
+```
+`-`age`:   For one year increases in age, the log odds of wheezing decreases by 0.1816 for a typical individual.
+
+`-`smoke`: The log odds of wheezing for a smoker is 0.3252 higher than for a non-smoker of the same age for typical individuals.
+
+For one year increase in age, the odds of wheezing decrease by 16.61% for a typical individual.
+
+
+
+
+**(f) Answer:**
+
+```{r}
+modgh <- glmer(resp ~ age + smoke + (1 | id), 
+               nAGQ     = 25,
+               family   = poisson,
+               data     = ohio)
+summary(modgh)
+```
+
+Compared with GLMM fit using penalized quasi-likelihood, this model gives a different estimates of the coefficient. The signs of the estimates are the same but the values are different. This model also indicates that age is not a significant predictor of wheezing while GLMM fit using penalized quasi-likelihood indicates that age is a significant predictor of wheezing.
+
+**(g) Answer:**
+
+```{r}
+library(INLA)
+```
+
+
+```{r}
+inla_mod <- inla(resp ~ age + smoke + f(id, model = "iid"), 
+               family = "binomial", 
+               data = ohio, 
+               verbose = TRUE)
+summary(inla_mod)
+```
+This model indicates that age is a significant predictor of wheezing while smoke is not a significant predictor of wheezing using 95% confidence interval.
+
+The model says that one year increase in age, the log odds of wheezing decrease by 0.73 for a typical individual. It also says for a smoker, the log odds of wheezing is 0.385 higher than for a non-smoker of the same age for typical individuals.
+
+
+
+
+
+**(i) Answer:**
+
+```{r}
+modgeep <- geeglm(resp ~ age + smoke,
+                  id        = id, 
+                  corstr    = "ar1",
+                  scale.fix = TRUE,
+                  data      = ohio,
+                  family    = binomial(link = "logit"))
+summary(modgeep)
+```
+
+The estimate of the alpha is 0.501. This reflects a moderate level of persistence in wheezing over time, indicating that children who wheeze at one time point have a moderate likelihood of wheezing at the next.
+
+**(j) Answer:**
+
+Smoker will have larger odds of wheezing than non-smoker of the same age. Increasing in age will have a negative effect on the odds of wheezing. The GLMM model is prefereable since it accounts for the correlation within the same individual.
